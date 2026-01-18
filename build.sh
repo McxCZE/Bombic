@@ -4,9 +4,9 @@
 set -e
 
 # Kontrola závislostí
-if ! pacman -Qi sdl2 sdl2_image sdl2_ttf sdl2_mixer cmake gcc &>/dev/null; then
+if ! pacman -Qi sdl2 sdl2_image sdl2_ttf sdl2_mixer sdl2_net cmake gcc &>/dev/null; then
     echo "Instaluji potřebné balíčky..."
-    sudo pacman -S --needed git cmake gcc sdl2 sdl2_image sdl2_ttf sdl2_mixer
+    sudo pacman -S --needed git cmake gcc sdl2 sdl2_image sdl2_ttf sdl2_mixer sdl2_net
 fi
 
 # Build
