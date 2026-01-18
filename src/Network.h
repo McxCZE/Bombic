@@ -28,6 +28,33 @@ enum NetPacketType : uint8_t {
     NET_PACKET_MAP_INFO = 11,    // Map selection info
     NET_PACKET_ROUND_END = 12,   // Round ended, winner info
     NET_PACKET_NEXT_ROUND = 13,  // Start next round
+    NET_PACKET_BOMB_PLACED = 14, // Bomb placed (host -> client)
+    NET_PACKET_BONUS_SPAWNED = 15, // Bonus spawned (host -> client)
+};
+
+// Bomb type enum for network sync
+enum NetBombType : uint8_t {
+    NET_BOMB_REGULAR = 0,
+    NET_BOMB_MEGA = 1,
+    NET_BOMB_NAPALM = 2
+};
+
+// Bomb placed packet (host -> client)
+struct NetBombPlacedPacket {
+    uint8_t type;           // NET_PACKET_BOMB_PLACED
+    uint8_t bomberID;       // Who placed (-1 for deadmatch random)
+    uint8_t bombType;       // NetBombType
+    int8_t x;               // Map X position
+    int8_t y;               // Map Y position
+    uint8_t dosah;          // Bomb range
+};
+
+// Bonus spawned packet (host -> client)
+struct NetBonusSpawnedPacket {
+    uint8_t type;           // NET_PACKET_BONUS_SPAWNED
+    int8_t x;               // Map X position
+    int8_t y;               // Map Y position
+    uint8_t bonusType;      // Bonus type ID (matches the switch case in AddBonus)
 };
 
 // Input state packet (sent each frame)
@@ -182,10 +209,24 @@ public:
     // Get received input (returns true if new input available)
     bool GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action);
 
+    // Send bomb placed (host only)
+    void SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah);
+
+    // Send bonus spawned (host only)
+    void SendBonusSpawned(int x, int y, int bonusType);
+
     // Game state sync (for client)
     bool HasGameStateUpdate() const { return m_gameStateUpdated; }
     void ClearGameStateUpdate() { m_gameStateUpdated = false; }
     const NetGameStatePacket& GetGameState() const { return m_gameState; }
+
+    // Bomb placed notification (for client)
+    bool HasBombPlaced() const { return m_bombPlacedCount > 0; }
+    NetBombPlacedPacket PopBombPlaced();
+
+    // Bonus spawned notification (for client)
+    bool HasBonusSpawned() const { return m_bonusSpawnedCount > 0; }
+    NetBonusSpawnedPacket PopBonusSpawned();
 
     // State queries
     NetRole GetRole() const { return m_role; }
@@ -261,6 +302,20 @@ private:
     // Game state sync (for client)
     bool m_gameStateUpdated;
     NetGameStatePacket m_gameState;
+
+    // Bomb placed queue (for client) - circular buffer
+    static const int MAX_BOMB_QUEUE = 16;
+    NetBombPlacedPacket m_bombPlacedQueue[MAX_BOMB_QUEUE];
+    int m_bombPlacedCount;
+    int m_bombPlacedHead;
+    int m_bombPlacedTail;
+
+    // Bonus spawned queue (for client) - circular buffer
+    static const int MAX_BONUS_QUEUE = 16;
+    NetBonusSpawnedPacket m_bonusSpawnedQueue[MAX_BONUS_QUEUE];
+    int m_bonusSpawnedCount;
+    int m_bonusSpawnedHead;
+    int m_bonusSpawnedTail;
 
     uint32_t m_localFrame;
 

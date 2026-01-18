@@ -28,6 +28,12 @@ Network::Network()
     , m_roundEnded(false)
     , m_nextRoundSignal(false)
     , m_gameStateUpdated(false)
+    , m_bombPlacedCount(0)
+    , m_bombPlacedHead(0)
+    , m_bombPlacedTail(0)
+    , m_bonusSpawnedCount(0)
+    , m_bonusSpawnedHead(0)
+    , m_bonusSpawnedTail(0)
     , m_localFrame(0)
 {
     memset(&m_remoteAddr, 0, sizeof(m_remoteAddr));
@@ -35,6 +41,8 @@ Network::Network()
     memset(&m_mapInfo, 0, sizeof(m_mapInfo));
     memset(&m_roundEndInfo, 0, sizeof(m_roundEndInfo));
     memset(&m_gameState, 0, sizeof(m_gameState));
+    memset(m_bombPlacedQueue, 0, sizeof(m_bombPlacedQueue));
+    memset(m_bonusSpawnedQueue, 0, sizeof(m_bonusSpawnedQueue));
 }
 
 Network::~Network()
@@ -344,6 +352,26 @@ void Network::HandlePacket(UDPpacket* packet)
             }
         }
         break;
+
+    case NET_PACKET_BOMB_PLACED:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBombPlacedPacket) && m_bombPlacedCount < MAX_BOMB_QUEUE) {
+                memcpy(&m_bombPlacedQueue[m_bombPlacedTail], packet->data, sizeof(NetBombPlacedPacket));
+                m_bombPlacedTail = (m_bombPlacedTail + 1) % MAX_BOMB_QUEUE;
+                m_bombPlacedCount++;
+            }
+        }
+        break;
+
+    case NET_PACKET_BONUS_SPAWNED:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBonusSpawnedPacket) && m_bonusSpawnedCount < MAX_BONUS_QUEUE) {
+                memcpy(&m_bonusSpawnedQueue[m_bonusSpawnedTail], packet->data, sizeof(NetBonusSpawnedPacket));
+                m_bonusSpawnedTail = (m_bonusSpawnedTail + 1) % MAX_BONUS_QUEUE;
+                m_bonusSpawnedCount++;
+            }
+        }
+        break;
     }
 }
 
@@ -484,4 +512,54 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
     packet.p1_bomb = (uint8_t)p1_bomb;
 
     SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBombPlacedPacket packet;
+    packet.type = NET_PACKET_BOMB_PLACED;
+    packet.bomberID = (uint8_t)bomberID;
+    packet.bombType = (uint8_t)bombType;
+    packet.x = (int8_t)x;
+    packet.y = (int8_t)y;
+    packet.dosah = (uint8_t)dosah;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendBonusSpawned(int x, int y, int bonusType)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBonusSpawnedPacket packet;
+    packet.type = NET_PACKET_BONUS_SPAWNED;
+    packet.x = (int8_t)x;
+    packet.y = (int8_t)y;
+    packet.bonusType = (uint8_t)bonusType;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+NetBombPlacedPacket Network::PopBombPlaced()
+{
+    NetBombPlacedPacket result = {};
+    if (m_bombPlacedCount > 0) {
+        result = m_bombPlacedQueue[m_bombPlacedHead];
+        m_bombPlacedHead = (m_bombPlacedHead + 1) % MAX_BOMB_QUEUE;
+        m_bombPlacedCount--;
+    }
+    return result;
+}
+
+NetBonusSpawnedPacket Network::PopBonusSpawned()
+{
+    NetBonusSpawnedPacket result = {};
+    if (m_bonusSpawnedCount > 0) {
+        result = m_bonusSpawnedQueue[m_bonusSpawnedHead];
+        m_bonusSpawnedHead = (m_bonusSpawnedHead + 1) % MAX_BONUS_QUEUE;
+        m_bonusSpawnedCount--;
+    }
+    return result;
 }

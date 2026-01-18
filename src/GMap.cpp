@@ -33,6 +33,32 @@
 #include "GBonus_napalmbomb.h"
 #include "GBonus_fireman.h"
 
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
+
+// Bonus type IDs for network sync
+#define BONUS_TYPE_NEMOC          0  // 0 = illness (uses AddNemoc)
+#define BONUS_TYPE_FIRE           1  // 1-3 = fire
+#define BONUS_TYPE_BOMB           4  // 4-7 = bomb
+#define BONUS_TYPE_SPEED          8
+#define BONUS_TYPE_TIMER          9
+#define BONUS_TYPE_MEGABOMB      10
+#define BONUS_TYPE_KICKER        11
+#define BONUS_TYPE_NAPALMBOMB    12
+#define BONUS_TYPE_POSILANI      13
+#define BONUS_TYPE_SHIELD        14
+#define BONUS_TYPE_LIVE          15
+#define BONUS_TYPE_NEMOC_OSTATNI 16
+#define BONUS_TYPE_FIREMAN       17
+// Nemoc (illness) subtypes: 100+
+#define BONUS_TYPE_N_SLOW        100
+#define BONUS_TYPE_N_BERSERK     101
+#define BONUS_TYPE_N_NOBOMB      102
+#define BONUS_TYPE_N_DEMENT      103
+#define BONUS_TYPE_N_STOP        104
+#define BONUS_TYPE_N_KICKER      105
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -402,30 +428,90 @@ void GMap::Destroy()
 
 void GMap::AddBonus(int mx, int my)
 {
-	GBonus *b = nullptr;
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only host decides bonus type
+	if (m_game->m_networkMode == GAME_MODE_LAN) {
+		if (g_network.IsClient()) {
+			// Client: do nothing, wait for host to send bonus info
+			return;
+		}
+		// Host: decide bonus type and send to client
+	}
+#endif
 
-	switch (rand()%m_bonuslevel) {
-	case 0: 
-		AddNemoc(mx, my);
-		return;
+	int bonusType;
+	int r = rand() % m_bonuslevel;
+
+	switch (r) {
+	case 0:
+		// Illness - determine specific type
+		{
+			int nemocType = rand() % 6;
+			bonusType = BONUS_TYPE_N_SLOW + nemocType;  // 100-105
+		}
 		break;
 	case  1:
 	case  2:
-	case  3: b = (GBonus*) new GBonus_fire;       break;
+	case  3: bonusType = BONUS_TYPE_FIRE;       break;
 	case  4:
 	case  5:
 	case  6:
-	case  7: b = (GBonus*) new GBonus_bomb;       break;
-	case  8: b = (GBonus*) new GBonus_speed;      break;
-	case  9: b = (GBonus*) new GBonus_timer;      break;
-	case 10: b = (GBonus*) new GBonus_megabomb;   break;
-	case 11: b = (GBonus*) new GBonus_kicker;     break;
-	case 12: b = (GBonus*) new GBonus_napalmbomb; break;
-	case 13: b = (GBonus*) new GBonus_posilani;   break;
-	case 14: b = (GBonus*) new GBonus_shield;     break;
-	case 15: b = (GBonus*) new GBonus_live;       break;
-	case 16: b = (GBonus*) new GBonus_nemoc_ostatni(m_game); break;
-	case 17: b = (GBonus*) new GBonus_fireman; break;
+	case  7: bonusType = BONUS_TYPE_BOMB;       break;
+	case  8: bonusType = BONUS_TYPE_SPEED;      break;
+	case  9: bonusType = BONUS_TYPE_TIMER;      break;
+	case 10: bonusType = BONUS_TYPE_MEGABOMB;   break;
+	case 11: bonusType = BONUS_TYPE_KICKER;     break;
+	case 12: bonusType = BONUS_TYPE_NAPALMBOMB; break;
+	case 13: bonusType = BONUS_TYPE_POSILANI;   break;
+	case 14: bonusType = BONUS_TYPE_SHIELD;     break;
+	case 15: bonusType = BONUS_TYPE_LIVE;       break;
+	case 16: bonusType = BONUS_TYPE_NEMOC_OSTATNI; break;
+	case 17: bonusType = BONUS_TYPE_FIREMAN;    break;
+	default: bonusType = BONUS_TYPE_FIRE;       break;
+	}
+
+#ifdef HAVE_SDL2_NET
+	// Host sends bonus info to client
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+		g_network.SendBonusSpawned(mx, my, bonusType);
+	}
+#endif
+
+	// Actually spawn the bonus
+	AddBonusByType(mx, my, bonusType);
+}
+
+void GMap::AddBonusByType(int mx, int my, int bonusType)
+{
+	GBonus *b = nullptr;
+
+	// Check for illness types (100+)
+	if (bonusType >= BONUS_TYPE_N_SLOW) {
+		switch (bonusType) {
+		case BONUS_TYPE_N_SLOW:    b = (GBonus*) new GBonus_n_slow;    break;
+		case BONUS_TYPE_N_BERSERK: b = (GBonus*) new GBonus_n_berserk; break;
+		case BONUS_TYPE_N_NOBOMB:  b = (GBonus*) new GBonus_n_nobomb;  break;
+		case BONUS_TYPE_N_DEMENT:  b = (GBonus*) new GBonus_n_dement;  break;
+		case BONUS_TYPE_N_STOP:    b = (GBonus*) new GBonus_n_stop;    break;
+		case BONUS_TYPE_N_KICKER:  b = (GBonus*) new GBonus_n_kicker;  break;
+		default:                   b = (GBonus*) new GBonus_n_slow;    break;
+		}
+	} else {
+		switch (bonusType) {
+		case BONUS_TYPE_FIRE:          b = (GBonus*) new GBonus_fire;       break;
+		case BONUS_TYPE_BOMB:          b = (GBonus*) new GBonus_bomb;       break;
+		case BONUS_TYPE_SPEED:         b = (GBonus*) new GBonus_speed;      break;
+		case BONUS_TYPE_TIMER:         b = (GBonus*) new GBonus_timer;      break;
+		case BONUS_TYPE_MEGABOMB:      b = (GBonus*) new GBonus_megabomb;   break;
+		case BONUS_TYPE_KICKER:        b = (GBonus*) new GBonus_kicker;     break;
+		case BONUS_TYPE_NAPALMBOMB:    b = (GBonus*) new GBonus_napalmbomb; break;
+		case BONUS_TYPE_POSILANI:      b = (GBonus*) new GBonus_posilani;   break;
+		case BONUS_TYPE_SHIELD:        b = (GBonus*) new GBonus_shield;     break;
+		case BONUS_TYPE_LIVE:          b = (GBonus*) new GBonus_live;       break;
+		case BONUS_TYPE_NEMOC_OSTATNI: b = (GBonus*) new GBonus_nemoc_ostatni(m_game); break;
+		case BONUS_TYPE_FIREMAN:       b = (GBonus*) new GBonus_fireman;    break;
+		default:                       b = (GBonus*) new GBonus_fire;       break;
+		}
 	}
 
 	if (b) {
@@ -436,20 +522,9 @@ void GMap::AddBonus(int mx, int my)
 
 void GMap::AddNemoc(int mx, int my)
 {
-	GBonus *b = nullptr;
-
-	switch (rand()%6) {
-	case 0 : b = (GBonus*) new GBonus_n_slow;    break;
-	case 1 : b = (GBonus*) new GBonus_n_berserk; break;
-	case 2 : b = (GBonus*) new GBonus_n_nobomb;  break;
-	case 3 : b = (GBonus*) new GBonus_n_dement;  break;
-	case 4 : b = (GBonus*) new GBonus_n_stop;    break;
-	case 5 : b = (GBonus*) new GBonus_n_kicker;  break;
-	default: b = (GBonus*) new GBonus_n_slow;    break;
-	}
-
-	m_bonusmap[mx][my] = b;
-	b->Init(mx, my, &m_bonusmap[mx][my], m_bBonus);
+	// This is now just a wrapper that picks a random illness
+	int nemocType = rand() % 6;
+	AddBonusByType(mx, my, BONUS_TYPE_N_SLOW + nemocType);
 }
 
 

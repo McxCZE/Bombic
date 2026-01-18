@@ -179,9 +179,32 @@ void GGame::Move()
 
 #define DEADMATCH_MAX_TIME 2000
 
-	// ukoncovani deadmatch
-	if (++m_game_time > DEADMATCH_MAX_TIME && m_deadmatch && gdeadmatch_bombkill) 
-		if (DEADMATCH_MAX_TIME*25 <=  m_game_time || rand()%(26-m_game_time/DEADMATCH_MAX_TIME) == 0) m_map.AddBomb(-1, rand()%m_map.m_x, rand()%m_map.m_y, 9);
+	// ukoncovani deadmatch - random bombs falling from sky
+#ifdef HAVE_SDL2_NET
+	if (m_networkMode == GAME_MODE_LAN) {
+		// In LAN mode, only host spawns random bombs and syncs to client
+		if (g_network.IsHost()) {
+			if (++m_game_time > DEADMATCH_MAX_TIME && m_deadmatch && gdeadmatch_bombkill) {
+				if (DEADMATCH_MAX_TIME*25 <= m_game_time || rand()%(26-m_game_time/DEADMATCH_MAX_TIME) == 0) {
+					int bx = rand() % m_map.m_x;
+					int by = rand() % m_map.m_y;
+					if (m_map.AddBomb(-1, bx, by, 9) != -1) {
+						g_network.SendBombPlaced(-1, NET_BOMB_REGULAR, bx, by, 9);
+					}
+				}
+			}
+		} else {
+			// Client just increments game time
+			++m_game_time;
+		}
+	} else
+#endif
+	{
+		// Local mode
+		if (++m_game_time > DEADMATCH_MAX_TIME && m_deadmatch && gdeadmatch_bombkill)
+			if (DEADMATCH_MAX_TIME*25 <= m_game_time || rand()%(26-m_game_time/DEADMATCH_MAX_TIME) == 0)
+				m_map.AddBomb(-1, rand()%m_map.m_x, rand()%m_map.m_y, 9);
+	}
 
 	// Zasahy
 	for (i = 0; i < m_mrch; i++) {
@@ -234,6 +257,22 @@ void GGame::Move()
 				m_bomber[0].m_bomb = state.p0_bomb;
 				m_bomber[1].m_bomb = state.p1_bomb;
 				g_network.ClearGameStateUpdate();
+			}
+
+			// Client: process bonus spawns from host
+			while (g_network.HasBonusSpawned()) {
+				NetBonusSpawnedPacket bonus = g_network.PopBonusSpawned();
+				m_map.AddBonusByType(bonus.x, bonus.y, bonus.bonusType);
+			}
+
+			// Client: process bomb placements from host (deadmatch random bombs)
+			while (g_network.HasBombPlaced()) {
+				NetBombPlacedPacket bomb = g_network.PopBombPlaced();
+				// Only handle deadmatch random bombs here (bomberID == -1 or 255)
+				// Regular player bombs are created locally from input
+				if (bomb.bomberID == 255 || (int8_t)bomb.bomberID == -1) {
+					m_map.AddBomb(-1, bomb.x, bomb.y, bomb.dosah);
+				}
 			}
 		}
 		// Client: game ends when m_gameended is set by MLANPlaying upon receiving round end packet

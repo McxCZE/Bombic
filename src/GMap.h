@@ -38,6 +38,7 @@ public:
 	void BombNapalmExpolode(GBomba *bomb);
 	int AddNapalmBomb(int bomberID, int x, int y, int dosah);
 	void AddNemoc(int mx, int my);
+	void AddBonusByType(int mx, int my, int bonusType);  // For network sync
 	void SetBombDanger(int x, int y, int d);
 	int AddMegaBomb(int bomberID, int x, int y, int dosah);
 	void BombMegaExpolode(GBomba *bomb);
