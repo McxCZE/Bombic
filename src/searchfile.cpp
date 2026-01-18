@@ -62,24 +62,29 @@ const char * PathList::next(void)
                cur_subdir = subdirs[subdir_num];
        }  
        
-       switch (state) { 
+       switch (state) {
        case 0:   // relative path
                snprintf(buf, PATH_MAX, "./%s/%s", cur_subdir, basename);
-               break; 
-       case 1:   // data directory taken from environment 
+               break;
+       case 1:   // data directory taken from environment
                env_data_dir = getenv("BOMBIC_DATA_DIR");
+               if (!env_data_dir) {
+                       // Skip to next state if env var not set
+                       state++;
+                       return next();
+               }
                snprintf(buf, PATH_MAX, "%s/%s/%s", env_data_dir, cur_subdir,
-                                       basename); 
-               break; 
+                                       basename);
+               break;
        case 2:   // default data diretory
-#ifdef PACKAGE_DATA_DIR 
+#ifdef PACKAGE_DATA_DIR
                snprintf(buf, PATH_MAX, PACKAGE_DATA_DIR "/%s/%s", cur_subdir,
-                                       basename);              
-               break;                            
-#endif                           
-       default:   
+                                       basename);
+               break;
+#endif
+       default:
                fprintf(stderr, "File %s not found\n", basename);
-               return NULL;  
+               return NULL;
        }
        
        if (fixed_subdir) {

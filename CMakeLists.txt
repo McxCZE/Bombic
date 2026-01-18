@@ -61,6 +61,7 @@ install(DIRECTORY data/
     PATTERN "*.ble"
     PATTERN "*.txt"
     PATTERN "*.ttf"
+    PATTERN "*.dat"
     PATTERN "Makefile*" EXCLUDE
 )
 
