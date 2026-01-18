@@ -51,6 +51,7 @@ struct NetBombPlacedPacket {
     int8_t x;               // Map X position
     int8_t y;               // Map Y position
     uint8_t dosah;          // Bomb range
+    uint8_t isTimerBomb;    // Whether bomber has timer ability (affects bomb timeout)
 };
 
 // Bonus spawned packet (host -> client)
@@ -260,7 +261,7 @@ public:
     bool GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action);
 
     // Send bomb placed (host only)
-    void SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah);
+    void SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah, bool isTimerBomb = false);
 
     // Send bonus spawned (host only)
     void SendBonusSpawned(int x, int y, int bonusType);

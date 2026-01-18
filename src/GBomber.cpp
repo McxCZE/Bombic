@@ -332,7 +332,7 @@ bool GBomber::PutBomb()
 #ifdef HAVE_SDL2_NET
 	// In LAN mode, host sends bomb placement to client
 	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
-		g_network.SendBombPlaced(m_ID, bombType, m_mx, m_my, m_bombdosah);
+		g_network.SendBombPlaced(m_ID, bombType, m_mx, m_my, m_bombdosah, m_casovac);
 	}
 #endif
 

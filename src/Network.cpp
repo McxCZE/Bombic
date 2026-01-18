@@ -580,7 +580,7 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
     SendPacket(&packet, sizeof(packet));
 }
 
-void Network::SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah)
+void Network::SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah, bool isTimerBomb)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
 
@@ -591,6 +591,7 @@ void Network::SendBombPlaced(int bomberID, int bombType, int x, int y, int dosah
     packet.x = (int8_t)x;
     packet.y = (int8_t)y;
     packet.dosah = (uint8_t)dosah;
+    packet.isTimerBomb = isTimerBomb ? 1 : 0;
 
     SendPacket(&packet, sizeof(packet));
 }

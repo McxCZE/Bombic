@@ -247,44 +247,50 @@ int GMap::AddBomb(int bomberID, int x, int y, int dosah)
 	return i;
 }
 
-int GMap::AddMegaBomb(int bomberID, int x, int y, int dosah)
+int GMap::AddMegaBomb(int bomberID, int x, int y, int dosah, bool fromNetwork)
 {
 	int i;
-	
+
 	if (m_bmap[x][y].bomba != nullptr) return -1;
 	if (!m_map[x][y].WalkIn()) return -1;
 
 	for (i = 0; i < MAX_BOMBS; i++)
 		if (m_bomba[i] == nullptr) break;
-	
+
 	if (i >= MAX_BOMBS) return -1;
 
 	m_bomba[i] = (new GBombaMega);
 
 	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah);
-	m_game->m_bomber[bomberID].m_megabombs--;
+	// Only decrement megabombs counter if not from network (host already did it)
+	if (!fromNetwork) {
+		m_game->m_bomber[bomberID].m_megabombs--;
+	}
 
 	m_bmap[x][y].bomba = m_bomba[i];
 
 	return i;
 }
 
-int GMap::AddNapalmBomb(int bomberID, int x, int y, int dosah)
+int GMap::AddNapalmBomb(int bomberID, int x, int y, int dosah, bool fromNetwork)
 {
 	int i;
-	
+
 	if (m_bmap[x][y].bomba != nullptr) return -1;
 	if (!m_map[x][y].WalkIn()) return -1;
 
 	for (i = 0; i < MAX_BOMBS; i++)
 		if (m_bomba[i] == nullptr) break;
-	
+
 	if (i >= MAX_BOMBS) return -1;
 
 	m_bomba[i] = (new GBombaNapalm);
 
 	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah);
-	m_game->m_bomber[bomberID].m_napalmbombs--;
+	// Only decrement napalmbombs counter if not from network (host already did it)
+	if (!fromNetwork) {
+		m_game->m_bomber[bomberID].m_napalmbombs--;
+	}
 
 	m_bmap[x][y].bomba = m_bomba[i];
 
@@ -344,13 +350,27 @@ void GMap::BombNapalmExpolode(GBomba *bomb)
 }
 
 
-#define ABOMB(x, y) if ((k = AddBomb(b, x, y, d)) != -1) m_bomba[k]->m_bombtime = 0;
+// Helper macro for mega bomb explosion
+// In LAN mode, client skips local bomb creation (receives from host)
+#ifdef HAVE_SDL2_NET
+#define ABOMB(bx, by) \
+	if (m_game->m_networkMode != GAME_MODE_LAN || g_network.IsHost()) { \
+		if ((k = AddBomb(b, bx, by, d)) != -1) { \
+			m_bomba[k]->m_bombtime = 0; \
+			if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) { \
+				g_network.SendBombPlaced(b, NET_BOMB_REGULAR, bx, by, d); \
+			} \
+		} \
+	}
+#else
+#define ABOMB(bx, by) if ((k = AddBomb(b, bx, by, d)) != -1) m_bomba[k]->m_bombtime = 0;
+#endif
 
 void GMap::BombMegaExpolode(GBomba *bomb)
 {
 	if (bomb == nullptr) return;
 
-	int x = bomb->m_mx, 
+	int x = bomb->m_mx,
 		 y = bomb->m_my,
 		 b = bomb->m_bomberID,
 		 d = bomb->m_dosah,
@@ -369,6 +389,8 @@ void GMap::BombMegaExpolode(GBomba *bomb)
 
 	m_game->m_view.StartTres(EXPLOTIME);
 }
+
+#undef ABOMB
 
 
 bool GMap::FireMap(int x, int y, int bmp, int b, int explotime)
@@ -522,7 +544,22 @@ void GMap::AddBonusByType(int mx, int my, int bonusType)
 
 void GMap::AddNemoc(int mx, int my)
 {
-	// This is now just a wrapper that picks a random illness
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only host decides illness type
+	if (m_game->m_networkMode == GAME_MODE_LAN) {
+		if (g_network.IsClient()) {
+			// Client: do nothing, wait for host to send bonus info
+			return;
+		}
+		// Host: pick random illness type and send to client
+		int nemocType = rand() % 6;
+		int bonusType = BONUS_TYPE_N_SLOW + nemocType;
+		g_network.SendBonusSpawned(mx, my, bonusType);
+		AddBonusByType(mx, my, bonusType);
+		return;
+	}
+#endif
+	// Local mode: just pick random illness
 	int nemocType = rand() % 6;
 	AddBonusByType(mx, my, BONUS_TYPE_N_SLOW + nemocType);
 }

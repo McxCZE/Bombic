@@ -100,6 +100,49 @@ Files modified:
 - `src/GBomber.cpp` - Host handles illness transfer and sends notification; client skips local illness logic
 - `src/GGame.cpp` - Client processes illness transfer packets
 
+### 10. Game Speed Adjustment Disabled in LAN
+**Problem:** The +/- keys adjust game speed (`gspeed`), but this wasn't synchronized between machines, causing massive desync.
+
+**Fix:** Disabled game speed adjustment in LAN mode.
+
+Files modified:
+- `src/GGame.cpp` - Speed adjustment keys disabled when `m_networkMode == GAME_MODE_LAN`
+
+### 11. Pause Disabled in LAN
+**Problem:** The 'P' key pauses the game locally, but this wasn't synchronized between machines, causing desync.
+
+**Fix:** Disabled pause in LAN mode.
+
+Files modified:
+- `src/GGame.cpp` - Pause key disabled when `m_networkMode == GAME_MODE_LAN`
+
+### 12. Megabomb Spawned Bombs Synchronization
+**Problem:** When a mega bomb explodes, it spawns 8 additional bombs around it. These bombs were created locally on both machines, which could cause desync if bomb positions drifted.
+
+**Fix:** Made megabomb spawned bombs host-authoritative. Client skips local bomb creation; receives bombs via `NET_PACKET_BOMB_PLACED` from host.
+
+Files modified:
+- `src/GMap.cpp` - Modified `ABOMB` macro to skip on client and send packets from host
+
+### 13. AddNemoc Random Illness Type Synchronization
+**Problem:** The `AddNemoc()` function (used by nemoc_ostatni bonus) uses `rand()` to pick illness type, which could differ between machines.
+
+**Fix:** Made illness type selection host-authoritative. Client skips local creation; receives via `NET_PACKET_BONUS_SPAWNED`.
+
+Files modified:
+- `src/GMap.cpp` - Added LAN mode check to `AddNemoc()`
+
+### 14. Timer Bomb Flag Synchronization
+**Problem:** When a player with the timer bonus places a bomb, the bomb's timeout is set to 100000 (essentially infinite). This check happened locally based on `m_casovac`, which might not be synced yet.
+
+**Fix:** Added `isTimerBomb` flag to `NetBombPlacedPacket`. Client applies the flag to set correct timeout.
+
+Files modified:
+- `src/Network.h` - Added `isTimerBomb` field to `NetBombPlacedPacket`
+- `src/Network.cpp` - Updated `SendBombPlaced()` to include timer flag
+- `src/GBomber.cpp` - Pass `m_casovac` when sending bomb placement
+- `src/GGame.cpp` - Client applies timer flag to set bomb timeout
+
 ## Known Limitations
 
 1. **Frame Timing** - Bomb explosions depend on local frame counting. Small timing differences are possible but mitigated by state sync.
@@ -111,3 +154,5 @@ Files modified:
 3. Test deadmatch mode with random bombs
 4. Test with monsters enabled to verify gameplay is acceptable
 5. Test timer bombs and kicker ability
+6. Test megabomb explosions
+7. Test nemoc_ostatni bonus (infects other players with illness)

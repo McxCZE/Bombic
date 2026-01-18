@@ -322,6 +322,11 @@ void GGame::Move()
 					break;
 				}
 
+				// If bomb was created and it's a timer bomb, set the long timeout
+				if (bombIdx != -1 && bomb.isTimerBomb && m_map.m_bomba[bombIdx] != nullptr) {
+					m_map.m_bomba[bombIdx]->m_bombtime = 100000;
+				}
+
 				// Play bomb placement sound if successful
 				if (bombIdx != -1 && bomberID >= 0) {
 					g_sb[SND_GAME_BOMBPUT].Play(false);
@@ -414,8 +419,14 @@ void GGame::Move()
 	}
 
 	// dame hraci moznost upravovat rychlost hry pri hre
-	if (dinput.m_key[SDL_SCANCODE_EQUALS]) if ((gspeed += 0.05f) > 4) gspeed = 4;
-	if (dinput.m_key[SDL_SCANCODE_MINUS]) if ((gspeed -= 0.05f) < 1) gspeed = 1;
+	// Note: Disabled in LAN mode to prevent desync
+#ifdef HAVE_SDL2_NET
+	if (m_networkMode != GAME_MODE_LAN)
+#endif
+	{
+		if (dinput.m_key[SDL_SCANCODE_EQUALS]) if ((gspeed += 0.05f) > 4) gspeed = 4;
+		if (dinput.m_key[SDL_SCANCODE_MINUS]) if ((gspeed -= 0.05f) < 1) gspeed = 1;
+	}
 }
 
 void GGame::Destroy()
@@ -454,7 +465,13 @@ int GGame::OnKey(int nChar)
 		break;
 //	case VK_PAUSE:
 	case SDLK_p:
-		m_paused = !m_paused;
+		// Pause disabled in LAN mode to prevent desync
+#ifdef HAVE_SDL2_NET
+		if (m_networkMode != GAME_MODE_LAN)
+#endif
+		{
+			m_paused = !m_paused;
+		}
 		break;
 	case SDLK_m:
 		m_show_mrtvol = !m_show_mrtvol;
