@@ -6,6 +6,11 @@
 #include "D3DXApp.h"
 #include "GBonus_n_kicker.h"
 #include "GMap.h"
+#include "GGame.h"
+#include "GBomber.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -41,5 +46,15 @@ void GBonus_n_kicker::AfterPut(int bombID)
 {
 	if (bombID < 0 || bombID >= MAX_BOMBS) return;
 	if (m_bomber->m_map->m_bomba[bombID] == nullptr) return;
-	m_bomber->m_map->m_bomba[bombID]->m_dir = rand()%5;
+	int newDir = rand()%5;
+	m_bomber->m_map->m_bomba[bombID]->m_dir = newDir;
+
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, host sends bomb direction change to client
+	if (m_bomber->m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost() && newDir > 0) {
+		int bx = m_bomber->m_map->m_bomba[bombID]->m_mx;
+		int by = m_bomber->m_map->m_bomba[bombID]->m_my;
+		g_network.SendBombKicked(bx, by, newDir);
+	}
+#endif
 }
