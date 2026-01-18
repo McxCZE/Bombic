@@ -30,6 +30,10 @@ enum NetPacketType : uint8_t {
     NET_PACKET_NEXT_ROUND = 13,  // Start next round
     NET_PACKET_BOMB_PLACED = 14, // Bomb placed (host -> client)
     NET_PACKET_BONUS_SPAWNED = 15, // Bonus spawned (host -> client)
+    NET_PACKET_BOMB_KICKED = 16, // Bomb kicked/pushed (host -> client)
+    NET_PACKET_BOMB_DETONATE = 17, // Timer bomb detonation (host -> client)
+    NET_PACKET_MRCHA_STATE = 18, // Monster state sync (host -> client)
+    NET_PACKET_ILLNESS_TRANSFER = 19, // Illness transfer between players (host -> client)
 };
 
 // Bomb type enum for network sync
@@ -55,6 +59,41 @@ struct NetBonusSpawnedPacket {
     int8_t x;               // Map X position
     int8_t y;               // Map Y position
     uint8_t bonusType;      // Bonus type ID (matches the switch case in AddBonus)
+};
+
+// Bomb kicked/pushed packet (host -> client)
+struct NetBombKickedPacket {
+    uint8_t type;           // NET_PACKET_BOMB_KICKED
+    int8_t x;               // Bomb map X position
+    int8_t y;               // Bomb map Y position
+    uint8_t dir;            // New direction (1=left, 2=right, 3=up, 4=down)
+};
+
+// Bomb detonate packet (host -> client) - for timer bombs
+struct NetBombDetonatePacket {
+    uint8_t type;           // NET_PACKET_BOMB_DETONATE
+    uint8_t bomberID;       // Which player's bombs to detonate
+};
+
+// Monster (mrcha) state sync packet (host -> client)
+struct NetMrchaStatePacket {
+    uint8_t type;           // NET_PACKET_MRCHA_STATE
+    uint8_t mrchaID;        // Monster index (0-255)
+    int16_t mx;             // Map tile X
+    int16_t my;             // Map tile Y
+    int16_t x;              // Pixel offset X (fixed point * 100)
+    int16_t y;              // Pixel offset Y (fixed point * 100)
+    uint8_t dir;            // Direction (0-4)
+    uint8_t dead;           // Is dead?
+    uint8_t lives;          // Remaining lives
+};
+
+// Illness transfer packet (host -> client)
+struct NetIllnessTransferPacket {
+    uint8_t type;           // NET_PACKET_ILLNESS_TRANSFER
+    uint8_t fromPlayer;     // Player who has the illness
+    uint8_t toPlayer;       // Player receiving the illness
+    uint8_t illnessType;    // Type of illness bonus (100+ range)
 };
 
 // Input state packet (sent each frame)
@@ -144,6 +183,15 @@ struct NetGameStatePacket {
     uint8_t p1_bombdosah;   // Player 1 bomb range
     uint8_t p0_bomb;        // Player 0 max bombs
     uint8_t p1_bomb;        // Player 1 max bombs
+    // Additional stats for special abilities
+    uint8_t p0_megabombs;   // Player 0 mega bombs count
+    uint8_t p1_megabombs;   // Player 1 mega bombs count
+    uint8_t p0_napalmbombs; // Player 0 napalm bombs count
+    uint8_t p1_napalmbombs; // Player 1 napalm bombs count
+    uint8_t p0_lives;       // Player 0 lives
+    uint8_t p1_lives;       // Player 1 lives
+    uint8_t p0_abilities;   // Player 0 abilities (bit flags: kopani, posilani, casovac)
+    uint8_t p1_abilities;   // Player 1 abilities (bit flags: kopani, posilani, casovac)
 };
 
 // Network role
@@ -204,7 +252,9 @@ public:
     // Send game state (host only, periodic position sync)
     void SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
                        int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
-                       int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb);
+                       int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
+                       int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
+                       int p0_lives, int p1_lives, int p0_abilities, int p1_abilities);
 
     // Get received input (returns true if new input available)
     bool GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action);
@@ -214,6 +264,18 @@ public:
 
     // Send bonus spawned (host only)
     void SendBonusSpawned(int x, int y, int bonusType);
+
+    // Send bomb kicked/pushed (host only)
+    void SendBombKicked(int x, int y, int dir);
+
+    // Send timer bomb detonate (host only)
+    void SendBombDetonate(int bomberID);
+
+    // Send monster state (host only)
+    void SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives);
+
+    // Send illness transfer (host only)
+    void SendIllnessTransfer(int fromPlayer, int toPlayer, int illnessType);
 
     // Game state sync (for client)
     bool HasGameStateUpdate() const { return m_gameStateUpdated; }
@@ -227,6 +289,22 @@ public:
     // Bonus spawned notification (for client)
     bool HasBonusSpawned() const { return m_bonusSpawnedCount > 0; }
     NetBonusSpawnedPacket PopBonusSpawned();
+
+    // Bomb kicked notification (for client)
+    bool HasBombKicked() const { return m_bombKickedCount > 0; }
+    NetBombKickedPacket PopBombKicked();
+
+    // Bomb detonate notification (for client)
+    bool HasBombDetonate() const { return m_bombDetonateCount > 0; }
+    NetBombDetonatePacket PopBombDetonate();
+
+    // Monster state notification (for client)
+    bool HasMrchaState() const { return m_mrchaStateCount > 0; }
+    NetMrchaStatePacket PopMrchaState();
+
+    // Illness transfer notification (for client)
+    bool HasIllnessTransfer() const { return m_illnessTransferCount > 0; }
+    NetIllnessTransferPacket PopIllnessTransfer();
 
     // State queries
     NetRole GetRole() const { return m_role; }
@@ -316,6 +394,34 @@ private:
     int m_bonusSpawnedCount;
     int m_bonusSpawnedHead;
     int m_bonusSpawnedTail;
+
+    // Bomb kicked queue (for client) - circular buffer
+    static const int MAX_KICK_QUEUE = 16;
+    NetBombKickedPacket m_bombKickedQueue[MAX_KICK_QUEUE];
+    int m_bombKickedCount;
+    int m_bombKickedHead;
+    int m_bombKickedTail;
+
+    // Bomb detonate queue (for client) - circular buffer
+    static const int MAX_DETONATE_QUEUE = 8;
+    NetBombDetonatePacket m_bombDetonateQueue[MAX_DETONATE_QUEUE];
+    int m_bombDetonateCount;
+    int m_bombDetonateHead;
+    int m_bombDetonateTail;
+
+    // Monster state queue (for client) - circular buffer
+    static const int MAX_MRCHA_QUEUE = 64;
+    NetMrchaStatePacket m_mrchaStateQueue[MAX_MRCHA_QUEUE];
+    int m_mrchaStateCount;
+    int m_mrchaStateHead;
+    int m_mrchaStateTail;
+
+    // Illness transfer queue (for client) - circular buffer
+    static const int MAX_ILLNESS_QUEUE = 8;
+    NetIllnessTransferPacket m_illnessTransferQueue[MAX_ILLNESS_QUEUE];
+    int m_illnessTransferCount;
+    int m_illnessTransferHead;
+    int m_illnessTransferTail;
 
     uint32_t m_localFrame;
 

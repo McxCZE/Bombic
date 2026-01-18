@@ -10,6 +10,7 @@
 #include "GGame.h"
 #include "MainFrm.h"
 #include "GFile.h"
+#include "GBonus.h"
 #ifdef HAVE_SDL2_NET
 #include "Network.h"
 #endif
@@ -222,11 +223,27 @@ void GGame::Move()
 		if (g_network.IsHost()) {
 			// Host: send periodic game state sync to client (every 5 frames)
 			if (m_game_time % 5 == 0) {
+				// Encode abilities as bit flags
+				int p0_abilities = (m_bomber[0].m_kopani ? 1 : 0) |
+				                   (m_bomber[0].m_posilani ? 2 : 0) |
+				                   (m_bomber[0].m_casovac ? 4 : 0);
+				int p1_abilities = (m_bomber[1].m_kopani ? 1 : 0) |
+				                   (m_bomber[1].m_posilani ? 2 : 0) |
+				                   (m_bomber[1].m_casovac ? 4 : 0);
 				g_network.SendGameState(
 					m_bomber[0].m_mx, m_bomber[0].m_my, m_bomber[0].m_x, m_bomber[0].m_y, m_bomber[0].m_dir, m_bomber[0].m_dead,
 					m_bomber[1].m_mx, m_bomber[1].m_my, m_bomber[1].m_x, m_bomber[1].m_y, m_bomber[1].m_dir, m_bomber[1].m_dead,
-					m_bomber[0].m_bombdosah, m_bomber[1].m_bombdosah, m_bomber[0].m_bomb, m_bomber[1].m_bomb
+					m_bomber[0].m_bombdosah, m_bomber[1].m_bombdosah, m_bomber[0].m_bomb, m_bomber[1].m_bomb,
+					m_bomber[0].m_megabombs, m_bomber[1].m_megabombs, m_bomber[0].m_napalmbombs, m_bomber[1].m_napalmbombs,
+					m_bomber[0].m_lives, m_bomber[1].m_lives, p0_abilities, p1_abilities
 				);
+
+				// Host: send monster states to client (every 5 frames)
+				for (int mi = 0; mi < m_mrch; mi++) {
+					g_network.SendMrchaState(mi, m_mrcha[mi].m_mx, m_mrcha[mi].m_my,
+						m_mrcha[mi].m_x, m_mrcha[mi].m_y, m_mrcha[mi].m_dir,
+						m_mrcha[mi].m_dead, m_mrcha[mi].m_lives);
+				}
 			}
 			if (EndGame()) {
 				if (--m_gameendig <= 0) {
@@ -256,6 +273,21 @@ void GGame::Move()
 				m_bomber[1].m_bombdosah = state.p1_bombdosah;
 				m_bomber[0].m_bomb = state.p0_bomb;
 				m_bomber[1].m_bomb = state.p1_bomb;
+				// Sync special bomb counts
+				m_bomber[0].m_megabombs = state.p0_megabombs;
+				m_bomber[1].m_megabombs = state.p1_megabombs;
+				m_bomber[0].m_napalmbombs = state.p0_napalmbombs;
+				m_bomber[1].m_napalmbombs = state.p1_napalmbombs;
+				// Sync lives
+				m_bomber[0].m_lives = state.p0_lives;
+				m_bomber[1].m_lives = state.p1_lives;
+				// Sync abilities from bit flags
+				m_bomber[0].m_kopani = (state.p0_abilities & 1) != 0;
+				m_bomber[0].m_posilani = (state.p0_abilities & 2) != 0;
+				m_bomber[0].m_casovac = (state.p0_abilities & 4) != 0;
+				m_bomber[1].m_kopani = (state.p1_abilities & 1) != 0;
+				m_bomber[1].m_posilani = (state.p1_abilities & 2) != 0;
+				m_bomber[1].m_casovac = (state.p1_abilities & 4) != 0;
 				g_network.ClearGameStateUpdate();
 			}
 
@@ -265,13 +297,107 @@ void GGame::Move()
 				m_map.AddBonusByType(bonus.x, bonus.y, bonus.bonusType);
 			}
 
-			// Client: process bomb placements from host (deadmatch random bombs)
+			// Client: process bomb placements from host (all bombs - host is authoritative)
 			while (g_network.HasBombPlaced()) {
 				NetBombPlacedPacket bomb = g_network.PopBombPlaced();
-				// Only handle deadmatch random bombs here (bomberID == -1 or 255)
-				// Regular player bombs are created locally from input
-				if (bomb.bomberID == 255 || (int8_t)bomb.bomberID == -1) {
-					m_map.AddBomb(-1, bomb.x, bomb.y, bomb.dosah);
+				int bomberID = (bomb.bomberID == 255) ? -1 : (int)bomb.bomberID;
+
+				// Create the appropriate bomb type
+				// Pass fromNetwork=true to avoid double-decrementing special bomb counters
+				int bombIdx = -1;
+				switch (bomb.bombType) {
+				case NET_BOMB_NAPALM:
+					if (bomberID >= 0 && bomberID < m_bombers) {
+						bombIdx = m_map.AddNapalmBomb(bomberID, bomb.x, bomb.y, bomb.dosah, true);
+					}
+					break;
+				case NET_BOMB_MEGA:
+					if (bomberID >= 0 && bomberID < m_bombers) {
+						bombIdx = m_map.AddMegaBomb(bomberID, bomb.x, bomb.y, bomb.dosah, true);
+					}
+					break;
+				case NET_BOMB_REGULAR:
+				default:
+					bombIdx = m_map.AddBomb(bomberID, bomb.x, bomb.y, bomb.dosah);
+					break;
+				}
+
+				// Play bomb placement sound if successful
+				if (bombIdx != -1 && bomberID >= 0) {
+					g_sb[SND_GAME_BOMBPUT].Play(false);
+				}
+			}
+
+			// Client: process bomb kick events from host
+			while (g_network.HasBombKicked()) {
+				NetBombKickedPacket kick = g_network.PopBombKicked();
+				// Set the bomb's direction at the specified position
+				if (kick.x >= 0 && kick.x < MAX_X && kick.y >= 0 && kick.y < MAX_Y) {
+					if (m_map.m_bmap[kick.x][kick.y].bomba != nullptr) {
+						m_map.m_bmap[kick.x][kick.y].bomba->m_dir = kick.dir;
+					}
+				}
+			}
+
+			// Client: process timer bomb detonation events from host
+			while (g_network.HasBombDetonate()) {
+				NetBombDetonatePacket det = g_network.PopBombDetonate();
+				int bomberID = det.bomberID;
+				// Detonate all bombs belonging to this player
+				for (int i = 0; i < MAX_BOMBS; i++) {
+					if (m_map.m_bomba[i] != nullptr && m_map.m_bomba[i]->m_bomberID == bomberID) {
+						m_map.m_bomba[i]->m_bombtime = 1;
+					}
+				}
+			}
+
+			// Client: process monster state updates from host
+			while (g_network.HasMrchaState()) {
+				NetMrchaStatePacket state = g_network.PopMrchaState();
+				int mrchaID = state.mrchaID;
+				if (mrchaID >= 0 && mrchaID < m_mrch) {
+					// Update monster position on map
+					// First remove from old position if alive
+					if (!m_mrcha[mrchaID].m_dead) {
+						m_map.m_mmap[m_mrcha[mrchaID].m_mx][m_mrcha[mrchaID].m_my]--;
+					}
+					// Apply new state
+					m_mrcha[mrchaID].m_mx = state.mx;
+					m_mrcha[mrchaID].m_my = state.my;
+					m_mrcha[mrchaID].m_x = state.x / 100.0f;
+					m_mrcha[mrchaID].m_y = state.y / 100.0f;
+					m_mrcha[mrchaID].m_dir = state.dir;
+					m_mrcha[mrchaID].m_lives = state.lives;
+					// Handle death state transition
+					if (state.dead && !m_mrcha[mrchaID].m_dead) {
+						m_mrcha[mrchaID].m_dead = true;
+						m_mrcha[mrchaID].m_anim = 0;
+					} else if (!state.dead) {
+						m_mrcha[mrchaID].m_dead = false;
+						// Add back to position map if alive
+						m_map.m_mmap[m_mrcha[mrchaID].m_mx][m_mrcha[mrchaID].m_my]++;
+					}
+				}
+			}
+
+			// Client: process illness transfers from host
+			while (g_network.HasIllnessTransfer()) {
+				NetIllnessTransferPacket illness = g_network.PopIllnessTransfer();
+				int fromPlayer = illness.fromPlayer;
+				int toPlayer = illness.toPlayer;
+				// Transfer illness from one player to another
+				if (fromPlayer >= 0 && fromPlayer < m_bombers &&
+					toPlayer >= 0 && toPlayer < m_bombers &&
+					m_bomber[fromPlayer].m_bonus != nullptr &&
+					m_bomber[fromPlayer].m_bonus->m_illness) {
+					// Delete old bonus if present
+					if (m_bomber[toPlayer].m_bonus) {
+						m_bomber[toPlayer].m_bonus->End();
+						delete m_bomber[toPlayer].m_bonus;
+					}
+					// Copy illness
+					m_bomber[toPlayer].m_bonus = m_bomber[fromPlayer].m_bonus->GetCopy();
+					m_bomber[toPlayer].m_bonus->m_self = &m_bomber[toPlayer].m_bonus;
 				}
 			}
 		}

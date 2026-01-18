@@ -8,6 +8,9 @@
 #include "GGame.h"
 #include "data.h"
 #include "GBonus.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -159,10 +162,27 @@ void GBomber::Move()
 
 	if (!m_action && m_undertimer) {
 		m_undertimer = false;
-		for (int i = 0; i < MAX_BOMBS; i++)
-			if (m_map->m_bomba[i] != nullptr)
-				if (m_map->m_bomba[i]->m_bomberID == m_ID) m_map->m_bomba[i]->m_bombtime = 1;
-	
+#ifdef HAVE_SDL2_NET
+		// In LAN mode, only host can detonate timer bombs
+		// Client waits for detonate notification from host
+		if (m_game->m_networkMode == GAME_MODE_LAN) {
+			if (g_network.IsClient()) {
+				// Client: do nothing, wait for host's detonation packet
+			} else if (g_network.IsHost()) {
+				// Host: detonate bombs and notify client
+				for (int i = 0; i < MAX_BOMBS; i++)
+					if (m_map->m_bomba[i] != nullptr)
+						if (m_map->m_bomba[i]->m_bomberID == m_ID) m_map->m_bomba[i]->m_bombtime = 1;
+				g_network.SendBombDetonate(m_ID);
+			}
+		} else
+#endif
+		{
+			// Local mode: normal timer bomb detonation
+			for (int i = 0; i < MAX_BOMBS; i++)
+				if (m_map->m_bomba[i] != nullptr)
+					if (m_map->m_bomba[i]->m_bomberID == m_ID) m_map->m_bomba[i]->m_bombtime = 1;
+		}
 	}
 
 }
@@ -204,20 +224,50 @@ int GBomber::Hit()
 
 void GBomber::GetBonus()
 {
-	// nakazlivost
-	if (m_bonus == nullptr) 
-		for (int i = 0; i < m_game->m_bombers; i++) 
-			if (m_game->m_bomber[i].m_bonus != nullptr &&
-				m_game->m_bomber[i].m_bonus->m_illness && 
-				m_game->m_bomber[i].m_mx == m_mx && m_game->m_bomber[i].m_my == m_my) 
-			{
-				if (m_bonus) {
-					m_bonus->End();
-					delete m_bonus;
+	// nakazlivost (illness transfer)
+#ifdef HAVE_SDL2_NET
+	if (m_game->m_networkMode == GAME_MODE_LAN) {
+		// In LAN mode, only host handles illness transfer
+		// Client receives illness transfer notifications via network
+		if (g_network.IsHost()) {
+			if (m_bonus == nullptr) {
+				for (int i = 0; i < m_game->m_bombers; i++) {
+					if (m_game->m_bomber[i].m_bonus != nullptr &&
+						m_game->m_bomber[i].m_bonus->m_illness &&
+						m_game->m_bomber[i].m_mx == m_mx && m_game->m_bomber[i].m_my == m_my)
+					{
+						if (m_bonus) {
+							m_bonus->End();
+							delete m_bonus;
+						}
+						m_bonus = m_game->m_bomber[i].m_bonus->GetCopy();
+						m_bonus->m_self = &m_bonus;
+						// Send illness transfer to client
+						g_network.SendIllnessTransfer(i, m_ID, m_game->m_bomber[i].m_bonus->m_type);
+						break;  // Only transfer once
+					}
 				}
-				m_bonus = m_game->m_bomber[i].m_bonus->GetCopy();
-				m_bonus->m_self = &m_bonus;
 			}
+		}
+		// Client: illness transfer is handled via network packets in GGame::Move()
+	} else
+#endif
+	{
+		// Local mode: original illness transfer logic
+		if (m_bonus == nullptr)
+			for (int i = 0; i < m_game->m_bombers; i++)
+				if (m_game->m_bomber[i].m_bonus != nullptr &&
+					m_game->m_bomber[i].m_bonus->m_illness &&
+					m_game->m_bomber[i].m_mx == m_mx && m_game->m_bomber[i].m_my == m_my)
+				{
+					if (m_bonus) {
+						m_bonus->End();
+						delete m_bonus;
+					}
+					m_bonus = m_game->m_bomber[i].m_bonus->GetCopy();
+					m_bonus->m_self = &m_bonus;
+				}
+	}
 
 
 	// bonus z mapy
@@ -254,17 +304,49 @@ bool GBomber::PutBomb()
 
 	if (m_hitting) return false;
 
-	if (m_napalmbombs) id = m_map->AddNapalmBomb(m_ID, m_mx, m_my, m_bombdosah);
-	else
-		if (m_megabombs) id = m_map->AddMegaBomb(m_ID, m_mx, m_my, m_bombdosah);
-		else id = m_map->AddBomb(m_ID, m_mx, m_my, m_bombdosah);
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only the host can create bombs
+	// Client waits for bomb placement packets from host
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+		// Client doesn't place bombs directly - host is authoritative
+		return false;
+	}
+#endif
+
+	int bombType = NET_BOMB_REGULAR;
+	if (m_napalmbombs) {
+		id = m_map->AddNapalmBomb(m_ID, m_mx, m_my, m_bombdosah);
+		bombType = NET_BOMB_NAPALM;
+	}
+	else if (m_megabombs) {
+		id = m_map->AddMegaBomb(m_ID, m_mx, m_my, m_bombdosah);
+		bombType = NET_BOMB_MEGA;
+	}
+	else {
+		id = m_map->AddBomb(m_ID, m_mx, m_my, m_bombdosah);
+		bombType = NET_BOMB_REGULAR;
+	}
 
 	if (id == -1) return false;
 
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, host sends bomb placement to client
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+		g_network.SendBombPlaced(m_ID, bombType, m_mx, m_my, m_bombdosah);
+	}
+#endif
+
 	g_sb[SND_GAME_BOMBPUT].Play(false);
 
-	if (m_posilani && m_map->m_bomba[id] && (m_dir == 0)) 
+	if (m_posilani && m_map->m_bomba[id] && (m_dir == 0)) {
 		m_map->m_bomba[id]->m_dir = m_smer+1;
+#ifdef HAVE_SDL2_NET
+		// In LAN mode, host sends bomb throw direction to client
+		if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+			g_network.SendBombKicked(m_mx, m_my, m_smer+1);
+		}
+#endif
+	}
 
 	if (m_bonus)
 		m_bonus->AfterPut(id);
@@ -276,22 +358,46 @@ void GBomber::KickBomb()
 {
 	if (!m_kopani) return;
 
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only host can kick bombs
+	// Client waits for kick notification from host
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+		return;
+	}
+#endif
+
+	int kickX = -1, kickY = -1;
 	switch (m_dir) {
 	case 1: // Doleva
-		if (m_map->m_bmap[m_mx-1][m_my].bomba != nullptr) 
+		if (m_map->m_bmap[m_mx-1][m_my].bomba != nullptr) {
 			m_map->m_bmap[m_mx-1][m_my].bomba->m_dir = 1;
+			kickX = m_mx-1; kickY = m_my;
+		}
 		break;
 	case 2: // doprava
-		if (m_map->m_bmap[m_mx+1][m_my].bomba != nullptr)
+		if (m_map->m_bmap[m_mx+1][m_my].bomba != nullptr) {
 			m_map->m_bmap[m_mx+1][m_my].bomba->m_dir = 2;
+			kickX = m_mx+1; kickY = m_my;
+		}
 		break;
 	case 3: // nahoru
-		if (m_map->m_bmap[m_mx][m_my-1].bomba != nullptr)
+		if (m_map->m_bmap[m_mx][m_my-1].bomba != nullptr) {
 			m_map->m_bmap[m_mx][m_my-1].bomba->m_dir = 3;
+			kickX = m_mx; kickY = m_my-1;
+		}
 		break;
 	case 4: // dolu
-		if (m_map->m_bmap[m_mx][m_my+1].bomba != nullptr)
+		if (m_map->m_bmap[m_mx][m_my+1].bomba != nullptr) {
 			m_map->m_bmap[m_mx][m_my+1].bomba->m_dir = 4;
+			kickX = m_mx; kickY = m_my+1;
+		}
 		break;
 	}
+
+#ifdef HAVE_SDL2_NET
+	// Host sends kick notification to client
+	if (kickX >= 0 && m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+		g_network.SendBombKicked(kickX, kickY, m_dir);
+	}
+#endif
 }

@@ -34,6 +34,18 @@ Network::Network()
     , m_bonusSpawnedCount(0)
     , m_bonusSpawnedHead(0)
     , m_bonusSpawnedTail(0)
+    , m_bombKickedCount(0)
+    , m_bombKickedHead(0)
+    , m_bombKickedTail(0)
+    , m_bombDetonateCount(0)
+    , m_bombDetonateHead(0)
+    , m_bombDetonateTail(0)
+    , m_mrchaStateCount(0)
+    , m_mrchaStateHead(0)
+    , m_mrchaStateTail(0)
+    , m_illnessTransferCount(0)
+    , m_illnessTransferHead(0)
+    , m_illnessTransferTail(0)
     , m_localFrame(0)
 {
     memset(&m_remoteAddr, 0, sizeof(m_remoteAddr));
@@ -43,6 +55,10 @@ Network::Network()
     memset(&m_gameState, 0, sizeof(m_gameState));
     memset(m_bombPlacedQueue, 0, sizeof(m_bombPlacedQueue));
     memset(m_bonusSpawnedQueue, 0, sizeof(m_bonusSpawnedQueue));
+    memset(m_bombKickedQueue, 0, sizeof(m_bombKickedQueue));
+    memset(m_bombDetonateQueue, 0, sizeof(m_bombDetonateQueue));
+    memset(m_mrchaStateQueue, 0, sizeof(m_mrchaStateQueue));
+    memset(m_illnessTransferQueue, 0, sizeof(m_illnessTransferQueue));
 }
 
 Network::~Network()
@@ -372,6 +388,46 @@ void Network::HandlePacket(UDPpacket* packet)
             }
         }
         break;
+
+    case NET_PACKET_BOMB_KICKED:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBombKickedPacket) && m_bombKickedCount < MAX_KICK_QUEUE) {
+                memcpy(&m_bombKickedQueue[m_bombKickedTail], packet->data, sizeof(NetBombKickedPacket));
+                m_bombKickedTail = (m_bombKickedTail + 1) % MAX_KICK_QUEUE;
+                m_bombKickedCount++;
+            }
+        }
+        break;
+
+    case NET_PACKET_BOMB_DETONATE:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBombDetonatePacket) && m_bombDetonateCount < MAX_DETONATE_QUEUE) {
+                memcpy(&m_bombDetonateQueue[m_bombDetonateTail], packet->data, sizeof(NetBombDetonatePacket));
+                m_bombDetonateTail = (m_bombDetonateTail + 1) % MAX_DETONATE_QUEUE;
+                m_bombDetonateCount++;
+            }
+        }
+        break;
+
+    case NET_PACKET_MRCHA_STATE:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetMrchaStatePacket) && m_mrchaStateCount < MAX_MRCHA_QUEUE) {
+                memcpy(&m_mrchaStateQueue[m_mrchaStateTail], packet->data, sizeof(NetMrchaStatePacket));
+                m_mrchaStateTail = (m_mrchaStateTail + 1) % MAX_MRCHA_QUEUE;
+                m_mrchaStateCount++;
+            }
+        }
+        break;
+
+    case NET_PACKET_ILLNESS_TRANSFER:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetIllnessTransferPacket) && m_illnessTransferCount < MAX_ILLNESS_QUEUE) {
+                memcpy(&m_illnessTransferQueue[m_illnessTransferTail], packet->data, sizeof(NetIllnessTransferPacket));
+                m_illnessTransferTail = (m_illnessTransferTail + 1) % MAX_ILLNESS_QUEUE;
+                m_illnessTransferCount++;
+            }
+        }
+        break;
     }
 }
 
@@ -488,7 +544,9 @@ void Network::SendNextRound()
 
 void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
                             int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
-                            int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb)
+                            int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
+                            int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
+                            int p0_lives, int p1_lives, int p0_abilities, int p1_abilities)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
 
@@ -510,6 +568,14 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
     packet.p1_bombdosah = (uint8_t)p1_bombdosah;
     packet.p0_bomb = (uint8_t)p0_bomb;
     packet.p1_bomb = (uint8_t)p1_bomb;
+    packet.p0_megabombs = (uint8_t)p0_megabombs;
+    packet.p1_megabombs = (uint8_t)p1_megabombs;
+    packet.p0_napalmbombs = (uint8_t)p0_napalmbombs;
+    packet.p1_napalmbombs = (uint8_t)p1_napalmbombs;
+    packet.p0_lives = (uint8_t)p0_lives;
+    packet.p1_lives = (uint8_t)p1_lives;
+    packet.p0_abilities = (uint8_t)p0_abilities;
+    packet.p1_abilities = (uint8_t)p1_abilities;
 
     SendPacket(&packet, sizeof(packet));
 }
@@ -560,6 +626,105 @@ NetBonusSpawnedPacket Network::PopBonusSpawned()
         result = m_bonusSpawnedQueue[m_bonusSpawnedHead];
         m_bonusSpawnedHead = (m_bonusSpawnedHead + 1) % MAX_BONUS_QUEUE;
         m_bonusSpawnedCount--;
+    }
+    return result;
+}
+
+void Network::SendBombKicked(int x, int y, int dir)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBombKickedPacket packet;
+    packet.type = NET_PACKET_BOMB_KICKED;
+    packet.x = (int8_t)x;
+    packet.y = (int8_t)y;
+    packet.dir = (uint8_t)dir;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendBombDetonate(int bomberID)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBombDetonatePacket packet;
+    packet.type = NET_PACKET_BOMB_DETONATE;
+    packet.bomberID = (uint8_t)bomberID;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+NetBombKickedPacket Network::PopBombKicked()
+{
+    NetBombKickedPacket result = {};
+    if (m_bombKickedCount > 0) {
+        result = m_bombKickedQueue[m_bombKickedHead];
+        m_bombKickedHead = (m_bombKickedHead + 1) % MAX_KICK_QUEUE;
+        m_bombKickedCount--;
+    }
+    return result;
+}
+
+NetBombDetonatePacket Network::PopBombDetonate()
+{
+    NetBombDetonatePacket result = {};
+    if (m_bombDetonateCount > 0) {
+        result = m_bombDetonateQueue[m_bombDetonateHead];
+        m_bombDetonateHead = (m_bombDetonateHead + 1) % MAX_DETONATE_QUEUE;
+        m_bombDetonateCount--;
+    }
+    return result;
+}
+
+void Network::SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetMrchaStatePacket packet;
+    packet.type = NET_PACKET_MRCHA_STATE;
+    packet.mrchaID = (uint8_t)mrchaID;
+    packet.mx = (int16_t)mx;
+    packet.my = (int16_t)my;
+    packet.x = (int16_t)(x * 100);  // Convert float to fixed point
+    packet.y = (int16_t)(y * 100);
+    packet.dir = (uint8_t)dir;
+    packet.dead = dead ? 1 : 0;
+    packet.lives = (uint8_t)lives;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+NetMrchaStatePacket Network::PopMrchaState()
+{
+    NetMrchaStatePacket result = {};
+    if (m_mrchaStateCount > 0) {
+        result = m_mrchaStateQueue[m_mrchaStateHead];
+        m_mrchaStateHead = (m_mrchaStateHead + 1) % MAX_MRCHA_QUEUE;
+        m_mrchaStateCount--;
+    }
+    return result;
+}
+
+void Network::SendIllnessTransfer(int fromPlayer, int toPlayer, int illnessType)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetIllnessTransferPacket packet;
+    packet.type = NET_PACKET_ILLNESS_TRANSFER;
+    packet.fromPlayer = (uint8_t)fromPlayer;
+    packet.toPlayer = (uint8_t)toPlayer;
+    packet.illnessType = (uint8_t)illnessType;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+NetIllnessTransferPacket Network::PopIllnessTransfer()
+{
+    NetIllnessTransferPacket result = {};
+    if (m_illnessTransferCount > 0) {
+        result = m_illnessTransferQueue[m_illnessTransferHead];
+        m_illnessTransferHead = (m_illnessTransferHead + 1) % MAX_ILLNESS_QUEUE;
+        m_illnessTransferCount--;
     }
     return result;
 }
