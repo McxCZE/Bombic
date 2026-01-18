@@ -68,8 +68,11 @@ void GView::Draw()
 	char s[50];
 
 	if (m_tres > 0) {
-		m_sx += rand()%10 - 5;
-		m_sy += rand()%10 - 5;
+		// Use SDL_GetTicks for cosmetic shake instead of rand()
+		// This prevents desyncing the game simulation RNG in LAN mode
+		Uint32 t = SDL_GetTicks();
+		m_sx += (int)((t * 7) % 10) - 5;
+		m_sy += (int)((t * 13) % 10) - 5;
 	}
 
 	// priprava bomberu a mrch na kresleni

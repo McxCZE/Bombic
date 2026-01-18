@@ -95,6 +95,30 @@ struct NetNextRoundPacket {
     uint8_t type;           // NET_PACKET_NEXT_ROUND
 };
 
+// Game state sync packet (host -> client, periodic position correction)
+struct NetGameStatePacket {
+    uint8_t type;           // NET_PACKET_GAME_STATE
+    // Player 0 position
+    int16_t p0_mx;          // Map X tile
+    int16_t p0_my;          // Map Y tile
+    int16_t p0_x;           // Pixel offset X (fixed point * 100)
+    int16_t p0_y;           // Pixel offset Y (fixed point * 100)
+    uint8_t p0_dir;         // Direction
+    uint8_t p0_dead;        // Is dead?
+    // Player 1 position
+    int16_t p1_mx;          // Map X tile
+    int16_t p1_my;          // Map Y tile
+    int16_t p1_x;           // Pixel offset X (fixed point * 100)
+    int16_t p1_y;           // Pixel offset Y (fixed point * 100)
+    uint8_t p1_dir;         // Direction
+    uint8_t p1_dead;        // Is dead?
+    // Bomber stats that affect gameplay
+    uint8_t p0_bombdosah;   // Player 0 bomb range
+    uint8_t p1_bombdosah;   // Player 1 bomb range
+    uint8_t p0_bomb;        // Player 0 max bombs
+    uint8_t p1_bomb;        // Player 1 max bombs
+};
+
 // Network role
 enum NetRole {
     NET_ROLE_NONE = 0,
@@ -150,8 +174,18 @@ public:
     // Send next round signal
     void SendNextRound();
 
+    // Send game state (host only, periodic position sync)
+    void SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
+                       int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
+                       int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb);
+
     // Get received input (returns true if new input available)
     bool GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action);
+
+    // Game state sync (for client)
+    bool HasGameStateUpdate() const { return m_gameStateUpdated; }
+    void ClearGameStateUpdate() { m_gameStateUpdated = false; }
+    const NetGameStatePacket& GetGameState() const { return m_gameState; }
 
     // State queries
     NetRole GetRole() const { return m_role; }
@@ -223,6 +257,10 @@ private:
 
     // Next round signal (for client)
     bool m_nextRoundSignal;
+
+    // Game state sync (for client)
+    bool m_gameStateUpdated;
+    NetGameStatePacket m_gameState;
 
     uint32_t m_localFrame;
 

@@ -196,10 +196,44 @@ void GGame::Move()
 	// In LAN mode, only the host can end the game
 	// Client waits for round end packet from host
 	if (m_networkMode == GAME_MODE_LAN) {
-		if (g_network.IsHost() && EndGame()) {
-			if (--m_gameendig <= 0) {
-				m_gameended = true;
-				m_pParent->StartMenu();
+		if (g_network.IsHost()) {
+			// Host: send periodic game state sync to client (every 5 frames)
+			if (m_game_time % 5 == 0) {
+				g_network.SendGameState(
+					m_bomber[0].m_mx, m_bomber[0].m_my, m_bomber[0].m_x, m_bomber[0].m_y, m_bomber[0].m_dir, m_bomber[0].m_dead,
+					m_bomber[1].m_mx, m_bomber[1].m_my, m_bomber[1].m_x, m_bomber[1].m_y, m_bomber[1].m_dir, m_bomber[1].m_dead,
+					m_bomber[0].m_bombdosah, m_bomber[1].m_bombdosah, m_bomber[0].m_bomb, m_bomber[1].m_bomb
+				);
+			}
+			if (EndGame()) {
+				if (--m_gameendig <= 0) {
+					m_gameended = true;
+					m_pParent->StartMenu();
+				}
+			}
+		} else {
+			// Client: apply game state corrections from host
+			if (g_network.HasGameStateUpdate()) {
+				const NetGameStatePacket& state = g_network.GetGameState();
+				// Apply position corrections for both players
+				m_bomber[0].m_mx = state.p0_mx;
+				m_bomber[0].m_my = state.p0_my;
+				m_bomber[0].m_x = state.p0_x / 100.0f;
+				m_bomber[0].m_y = state.p0_y / 100.0f;
+				m_bomber[0].m_dir = state.p0_dir;
+				m_bomber[0].m_dead = state.p0_dead;
+				m_bomber[1].m_mx = state.p1_mx;
+				m_bomber[1].m_my = state.p1_my;
+				m_bomber[1].m_x = state.p1_x / 100.0f;
+				m_bomber[1].m_y = state.p1_y / 100.0f;
+				m_bomber[1].m_dir = state.p1_dir;
+				m_bomber[1].m_dead = state.p1_dead;
+				// Sync gameplay-affecting stats
+				m_bomber[0].m_bombdosah = state.p0_bombdosah;
+				m_bomber[1].m_bombdosah = state.p1_bombdosah;
+				m_bomber[0].m_bomb = state.p0_bomb;
+				m_bomber[1].m_bomb = state.p1_bomb;
+				g_network.ClearGameStateUpdate();
 			}
 		}
 		// Client: game ends when m_gameended is set by MLANPlaying upon receiving round end packet

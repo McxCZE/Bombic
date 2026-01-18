@@ -27,12 +27,14 @@ Network::Network()
     , m_mapInfoUpdated(false)
     , m_roundEnded(false)
     , m_nextRoundSignal(false)
+    , m_gameStateUpdated(false)
     , m_localFrame(0)
 {
     memset(&m_remoteAddr, 0, sizeof(m_remoteAddr));
     memset(&m_gameStartInfo, 0, sizeof(m_gameStartInfo));
     memset(&m_mapInfo, 0, sizeof(m_mapInfo));
     memset(&m_roundEndInfo, 0, sizeof(m_roundEndInfo));
+    memset(&m_gameState, 0, sizeof(m_gameState));
 }
 
 Network::~Network()
@@ -333,6 +335,15 @@ void Network::HandlePacket(UDPpacket* packet)
             m_nextRoundSignal = true;
         }
         break;
+
+    case NET_PACKET_GAME_STATE:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetGameStatePacket)) {
+                memcpy(&m_gameState, packet->data, sizeof(NetGameStatePacket));
+                m_gameStateUpdated = true;
+            }
+        }
+        break;
     }
 }
 
@@ -412,18 +423,16 @@ void Network::SendReady(bool ready)
 
 bool Network::GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action)
 {
-    if (!m_remoteInputAvailable) {
-        left = right = up = down = action = false;
-        return false;
-    }
-
+    // Always return the last known input state, even if no new packet arrived
+    // This prevents "moonwalking" caused by UDP packet loss
     left = m_remoteLeft;
     right = m_remoteRight;
     up = m_remoteUp;
     down = m_remoteDown;
     action = m_remoteAction;
 
-    return true;
+    // Return true if we've ever received input (connection is alive)
+    return m_remoteInputAvailable;
 }
 
 void Network::SendRoundEnd(int winnerID, int score0, int score1)
@@ -445,6 +454,34 @@ void Network::SendNextRound()
 
     NetNextRoundPacket packet;
     packet.type = NET_PACKET_NEXT_ROUND;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
+                            int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
+                            int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetGameStatePacket packet;
+    packet.type = NET_PACKET_GAME_STATE;
+    packet.p0_mx = (int16_t)p0_mx;
+    packet.p0_my = (int16_t)p0_my;
+    packet.p0_x = (int16_t)(p0_x * 100);  // Convert float to fixed point
+    packet.p0_y = (int16_t)(p0_y * 100);
+    packet.p0_dir = (uint8_t)p0_dir;
+    packet.p0_dead = p0_dead ? 1 : 0;
+    packet.p1_mx = (int16_t)p1_mx;
+    packet.p1_my = (int16_t)p1_my;
+    packet.p1_x = (int16_t)(p1_x * 100);
+    packet.p1_y = (int16_t)(p1_y * 100);
+    packet.p1_dir = (uint8_t)p1_dir;
+    packet.p1_dead = p1_dead ? 1 : 0;
+    packet.p0_bombdosah = (uint8_t)p0_bombdosah;
+    packet.p1_bombdosah = (uint8_t)p1_bombdosah;
+    packet.p0_bomb = (uint8_t)p0_bomb;
+    packet.p1_bomb = (uint8_t)p1_bomb;
 
     SendPacket(&packet, sizeof(packet));
 }
