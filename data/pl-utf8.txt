@@ -1,0 +1,290 @@
+0 Język/Language: Polski;
+1 Scenariusz;
+2 Deathmatch;
+3 Koniec;
+4 Potwory;
+5 Ustawienia;
+6 Pomoc;
+7 Autorzy;
+
+10 Rozpoczęcie!;
+11 Liczba graczy;
+12 Kod;
+13 Powrót;
+
+20 Start!;
+21 Liczba graczy;
+22 Liczba potworów;
+23 Ilość zwycięstw;
+24 Dodatki;
+25 Powrót;
+
+30 Język: Polski;
+31 Deathmatch ograniczony;
+32 Deatchmatch bez ograniczenia;
+33 Oznaczenie zasięgu eksplozji bomby;
+34 Niewidoczne oznaczenie zasięgu eksplozji bomby;
+35 Prędkość gry;
+37 Graj w oknie;
+38 Pełny ekran;
+42 Dźwięk: włączony;
+43 Dźwięk: cisza;
+36 Powrót;
+
+40 Pauza;
+41 Trupy;
+
+
+60 Prędkość;
+61 Poziom inteligencji;
+62 Zmienność;
+63 Życia;
+
+70 Sterowanie;
+71 Gracz 1:;
+72 Gracz 2:;
+73 Gracz 3:;
+74 Gracz 4:;
+75 Prawy;
+76 Lewy;
+77 Prędkość gry;
+78 Pauza;
+79 NumLock;
+
+100 Bombic;
+101 Szara kula;
+102 Slimer;
+103 Chmurnik;
+104 Duch;
+105 Trap;
+106 Czerwona kula;
+107 Zaawansowana pułapka;
+108 TV;
+109 Sandmaster;
+110 Księżycnik;
+111 Ślepiec;
+
+120 To pokojowo nastawiony osobnik. Jest szczęśliwy ze swoimi przyjaciółmi
+wraz z którymi spędza miło czas popijając dobre trunki.;
+121 Małe i niezbyt rozgarnięte, myślą tylko o tym by coś zjeść,
+więc nie powinno być z nimi problemów;
+122 Nienawidzi wody. Właśnie dlatego nigdy się nie myje. ;
+123 Pokojowo nastawione latające stworzenie. 
+Niestety jest toksyczne, więc lepiej go nie dotykać.;
+124 Duże, silne stworzenie. Lepiej na niego uważać.;
+125 Klasyczna, niebezpieczna pułapka - wielka kula z kolcami.;
+126 Rodzinnie związana się z szarą kulą,
+lecz bardziej przystosowana do dzikiego życia.;
+127 Zaawansowana wersja toczącej się kuli. Jest szybsza 
+i ma cieplny detektor.;
+128 Źle wychowany telewizor. Był na płycie montażowej, gdy się ożywił. 
+Uważaj na jego błyskawice.;
+129 Związał się ze Slimerem.
+Używa jego rogów zamiast szlamu dla obrony.;
+130 Szybki, podstępny i bardzo niebezpieczny.; 
+131 Najniebezpieczniejszy ze wszystkich. Nie daruje nikomu.;
+
+
+500 Jak co dzień rano i tego dnia przeglądałem gazety rozpocząwszy 
+od mojej ulubionej: "Daily Bomb". Moją uwagę przykuła rubryka ogłoszeń,
+a dokładniej te, które mnie zaintrygowało: "Jesteś odważny? 
+Weź udział w wyprawie do puszczy. Chcemy, byś dostarczył od nas 
+wiadomość dla pustelnika. Opłatą będzie skrzynia Becherovki"... 
+Beherovka? hmm... nie, nie jestem alkoholikiem,
+ale mając dużo wolnego czasu pomyślałem: dlaczego nie ?
+                   ...zdecydowałem się odpowiedzieć...;
+
+501 Zanurzywszy się tylko w puszczy zostałem zaatakowany przez
+jakieś nieprzyjacielskie stworzenia: wstrętne latające głowy.
+Bądź, co bądź w strachu, użyłem moich bomb, które zdawały się jakby 
+tylko na to czekać. 
+Stworzenia nie miały szans...;
+
+502 Im bardziej zanurzam się w głąb puszczy tym bardziej jestem przekonany,
+że zadanie wcale nie będzie takie łatwe jak wydawało się na początku.
+Nieprzygotowany na jakiekolwiek ataki w ciągłym strachu podążam przed siebie
+zbierając znalezione pakunki, za pomocą których ulepszam swoje bomby.
+Nie wiem jak to się wszystko skończy...;
+
+503 Na mojej drodze pojawia się coraz więcej tych przedziwnych stworzeń.
+Przed oczyma śmignął mi (oj to chyba za dużo powiedziane)
+strasznie duży i brudny stwór, który wbrew swemu 
+wyglądowi chyba wcale nie był taki głupi...
+Skrzynia Becherovki...taak.... to jedyna rzecz, która mnie jeszcze 
+tu trzyma i nie pozwala zawrócić...
+...skrzynia Becherovki...;
+
+504 Wielki posąg Bombera. Musiał być
+wybudowane przez wielkich wojowników dla Największego...
+niestety jednak jego imię jest zamazane...
+a chciałbym... a chciałbym mieć jego umiejętności... 
+Zaraz, zaraz.... 
+Tego pomnika nie ma przecież na mapie! 
+                                    Czyżbym dostał nie tę co trzeba ?;
+
+505W końcu  udało mi się odnaleźć dom pustelnika w którym go nie zastałem...
+nie zastałem tam nikogo... 
+tylko te stworzenia wokoło... 
+ciągle tylko te stworzenia...;
+
+507 Zzzzzzzzz, zzzzzzzzz,zzzzzzzz...;
+
+508 To był sen. Niemalże koszmar, pewnie to wszystko przez te ohydne stworzenia... 
+Aczkolwiek nie miałem problemu z pozbyciem się go... 
+Cyba jestem w dobrej formie!;
+
+509 Ponieważ Pustelnik zniknął nie zamierzałem dłużej zagrzewać tam miejsca...
+było zresztą zbyt niebezpiecznie by pozostać...
+Postanowiłem wrócić do domu - droga przecież powinna być o wiele prostsza...;
+
+510 Dziwne, ale miejsce nie wygląda mi na zbytnio znajome i mam 
+wobec niego złe przeczucia...
+Zresztą... nie przypominam sobie bym tędy szedł... zabłądziłem?
+Nadzieja chyba w tym by iść prosto przed siebie... aż do końca puszczy;
+
+511 Biedny Pustelnik. Pewnie te ohydne stworzenia dobrały się i do niego. 
+Teraz wiem, o co chodziło w tej informacji, którą miałem dostarczyć,
+a która brzmiała następująco:
+"Nie rób tego. To jest zbyt niebezpieczne.";
+
+512 Przed sobą widzę skrzynię. To prawdopodobnie jest ta, 
+której poszukiwał Pustelnik.
+Muszę ją otworzyć... muszę... jednak wcześniej...ten duch...
+ten duch z moich snów... on jest żywy... muszę się go pozbyć.;
+
+513 Wygrałem śmiertelny pojedynek. Trzęsącymi się rękoma otworzyłem
+skrzynię, podniosłem ogromne wieko, by ujrzeć.... jej dno...
+była pusta... pusta...pusta...
+
+Nagle poczułem jak coś mi szeptało do ucha bym udał się tam - do jaskini...
+ruszyłem...;
+
+515 Hek Uh Uh Chrchl Chrchl... Następnym razem...
+chrchl uh uh... będę... hek...
+... bardziej ostrożny... aaahhrrr...
+... widzę światło...
+
+
+
+                                                                                                 tłumaczenie:
+                                                                                               LeszQ Waligóra
+
+
+
+
+                               ściągnięte z : http://Bombic.TK
+
+                                 ;
+
+520 Gościu, który ukradł skarb od skrzyni prawdopodobnie będzie tam
+w tej niewielkiej jaskini... ale przekonam się tylko o tym wtedy,
+gdy tam wejdę...;
+
+521 To jest nieprawdopodobne. Obiekt z zewnątrz wyglądający na małą jaskinię 
+jest ogromnym kompleksem złożonym z wielu korytarzy...Zastanawiam się 
+po co ktoś wybudował to coś, może nawt uda mi się tego dowiedzieć...
+Niestety i tutaj nie jestem sam... co chwilę odwiedzają
+mnie starzy "znajomi" z chęcią pozbawienia mnie
+życia... 
+Przeszukując pomieszczenia znalazłem coś
+co pozwala mi ich skutecznie wykańczać...;
+
+522 Niewiele brakowało , a zostałbym podziurawiony przez tę
+kulę z kolcami...
+Starzy "znajomi" już się tak często nie zjawiają... 
+zapewne przez te drzewa ukrywające wszystko.;
+
+523 Znalazłem tajemniczą maszynę.
+Próbowałem za jej pomocą zbadać dalszą drogę,
+niestety była uszkodzona i nie byłem w stanie 
+jej naprawić...
+Moi starzy wrogowie chyba są już są historią, 
+gdyż nie widuję ich od pewnego czasu.;
+
+524 Napotkałem na swojej drodze nowe nieznane mi stworzenie.
+Podobne jest do tego z lasu tyle, że jest jakby zmutowane:
+czerwone, bardziej odporne i nieco mądrzejsze.
+Wiedziałem, że byłoby zbyt pięknie, gdyby to wszystko
+się skończyło.;
+
+525 Co my tu mamy? Hmmm.... taki miły...pyszny! - rzekłbym zapach .
+Jak ktoś mógł zapomnieć o takim miejscu jak to?
+ech.... zaniedbane długo takie pewno nie będzie...;
+
+526 Mmm. Smaczne... Pychota!...;
+
+527 Hmm.... To będzie chyba mój ulubiony najbardziej efektowny 
+wybuchowy drink z jakim miałem kiedykolwiek do czynienia!
+
+Szykujcie się ohydne robale...;
+
+528 O, tutaj jest ogromna dziura... Zdaje się, że chyba dobrze idę
+i z każdą chwilą jestem coraz bliżej końca...
+Chociaż przeczuwam, że nie będzie to jeszcze mój koniec...
+
+Gdzieś mi mignęła między oczami ogromna kula, której nie dało
+się ot tak zniszczyć... była jakby inteligentniejsza... lepiej zaprogramowana...;
+
+529 Och nie... to ten potworny telewizor z mojego koszmaru...
+Ale jeszcze nie wie co znaczy się spotkać moimi bombami.
+Tylko jeden z nas wyjdzie z tego cało... i ja nie mam 
+w najbliższych planach umrzeć...;
+
+530 Wreszcie!!!!
+Słońce...witaj me słońce... widzę Cię znów....
+aaach.... do domu... do pubu... do starych znajomych...
+tam chcę teraz być...;
+
+540 Tak szczerze to spodziewałem się nieco innego uczucia,
+aczkolwiek chyba najważniejsze jest to, że słońce
+świeci nadal i wreszcie mogę odetchnąć świeżym powietrzem...
+Mam także nadzieję, że wkrótce powrócę do cywilizacji:
+stęskniłem się jednak już i za przyjaciółmi, i za TV, 
+nie wspominając już o tym, że mam ogromną ochotę
+zjeść hamburgera popijanego colą...;
+
+541 O, nie. Te czerwone wynaturzone nudne stwory wróciły...
+Ech... ciekawe dlaczego one są tak głupie, tak nieinteligentne,
+że moja babcia bez problemu by sobie z nimi poradziła...
+;
+
+542 Hm! To wygląda na drapieżnika! 
+Zauważyłem go gdy wcinał jedno z tych czerwonych chodzących
+świństw, i wtedy mnie też dostrzegł...
+ale ta prędkość...jest zbyt wolny by mnie dogonić...;
+
+543 Hmm.... chyba widziałem już coś takiego kiedyś... o tak...
+To COŚ było w domu pustelnika, gdy tam zajrzałem...
+Hmm... to jest jakiś rzadki gatunek chyba... ale i tak nie mam
+ochoty stawać z nimi twarzą w twarz...
+Próbuję ich unikać...;
+
+544 To wygląda na jakiś statek... ale na środku pustyni?
+Na kadłubie jest napis:
+"wyprawy do Morza Życzeń - szczęście dla każdego"
+Co to znaczy? Kto coś takiego zostawił w takim miejscu?;
+
+545 Ciekawie byłoby znaleźć takie morze życzeń...
+Oczywiście nie byłaby w nim woda...tylko jakiś napój...hm...
+I ten zapach... hm... no i te życzenia! 
+;
+
+546 Chrrrrr Chrrrrrr Chrrrrr...;
+
+547 Sny są jednak dobrym wynalazkiem. Ilekroć mam jakiś problem 
+wystarczy się obudzić... po prostu wystarczy.
+Nie to co rzeczywistość... i ta walka... o przetrwanie...
+Nie... nie dam się zabić tak łatwo... nie teraz... nie...;
+
+548 Studnia na środku pustyni... pusta okazała się niestety,
+ale zauważyłem także ślady cywilizacji pozostawione na piasku...
+a więc ktoś tędy wędruje... a więc idę w kierunku życia;
+
+549 Ten koleś, któremu przyglądam się już od dłuższego czasu wygląda
+na naprawdę złego i źle nastawionego do otoczenia... Spróbuję
+z nim negocjować... za pomocą bomb oczywiście...;
+
+
+550 Wielki zły Heros ochraniał morze życzeń.
+Teraz, kiedy go już nie ma mogę sobie czegoś zażyczyć... a czego?
+BECHEROVKĘ DLA KAŻDEGO I ZA DARMO! TAK! BY NIKT NIE ODSZEDŁ Z PUSTMI RĘKOMA;

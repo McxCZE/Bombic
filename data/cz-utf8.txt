@@ -1,0 +1,278 @@
+0 Jazyk/Language: Česky;
+
+1 Příběh;
+2 Dedmeč;
+3 Konec;
+4 Mrchovník;
+5 Nastavení;
+6 Nápověda;
+7 Autoři;
+
+10 Hrrr na ně!;
+11 Počet hráčů;
+12 Kód;
+13 Zpět;
+
+20 Do boje!;
+21 Počet hráčů;
+22 Příšery;
+23 Vítězství;
+24 Bonusy;
+25 Zpět;
+
+30 Jazyk: Česky;
+31 Násilné ukončení dedmeče;
+32 Dedmeč bez omezení;
+33 Viditelný odhad exploze;
+34 Neviditelný odhad exploze;
+35 Rychlost hry;
+37 Hra v okně;
+38 Celoobrazovkový mód;
+42 Zvuk zapnut;
+43 Zvuk vypnut;
+36 Zpět;
+
+40 Pauza;
+41 Mrtvol;
+
+
+60 Rychlost;
+61 Inteligence;
+62 Proměnlivá;
+63 Životy;
+
+70 Ovládání;
+71 1. Hráč;
+72 2. Hráč;
+73 3. Hráč;
+74 4. Hráč;
+75 pravý;
+76 levý;
+77 Rychlost hry;
+78 Pauza;
+79 NumLock;
+
+100 Bombič;
+101 Koule hnědá;
+102 Slizoun;
+103 Mráček;
+104 Duch;
+105 Past;
+106 Koule rudá;
+107 Vylepšená past;
+108 Televize;
+109 Pískoun;
+110 Měsíček;
+111 Dudlík;
+
+120 Mírumilovná bytost. Nejraději se baví s přateli. 
+A jestě lépe, má-li k tomu co pít.;
+121 Malá ošklivka. Jediné na co myslí 
+je jídlo.;
+122 Nesnáší vodu. Proto se nikdy nemije. Nikdo 
+neví, co je pod nánosem bahna a slizu.;
+123 Poklidně poletující bytost. Naneštěstí
+je jedovatý už jen na dotek.;
+124 Velký a silný záporný hrdina. je dobré
+si na něj dávat pozor.;
+125 Velká ohrocená valivá koule. Zdá se, ze
+má v sobě setrvačník.;
+126 Druhová příbuzná s obyčejnou koulí
+hnědou. Ale přizpůsobena drsnějšímu životu.;
+127 Vylepšený typ valivé koule. Je rychlejší
+a má zabudovaný detektor tepla.;
+128 Zakomplexovaná televize. Pravděpodobně
+došlo ke zkratu a TV obživla. Pozor na blesky.;
+129 Příbuzný slizouna. V suché pošti však
+místo slizu používá na ochranu rohovinu.;
+130 Rychlý, záludný a nebezpečný. Nejlepší
+rychle utéct. A hodně daleko.;
+131 Hlavní záporný hrdina. (HZH) Zabíjí na
+počkání. Nejhorší z nejhorších.;
+
+
+
+500 To si takhle čtu noviny - svoje oblíbené Daily Bomb 
+- když v tom jsem narazil na inzerát: "Hledáme odvážlivce,
+který by se vypravil do lesa za poustevníkem a doručil
+mu vzkaz. Odměnou budiž truhla plná Becherovky." Stejně
+nemám co dělat, tak proč to nezkusit...;
+
+501 Jakmile jsem dorazil k pralesu, ihned na mě zaútočily 
+nějaký potvory. Odporný lítající hlavy. Docela mi nahnaly 
+strach. Naštěstí jsem u sebe našel pár bomb, který s nima 
+udělaly rychlej konec.;
+
+502 Jak postupuji hlouběji do lesa, začíná přibývat potvor.
+V tom inzerátu se zřejmě zapomněli zmínit o těchto 
+„nesnázích“. Naštěstí jsem cestou našel několik málo 
+zlepšováků, které mi pomohli vylepšit mé bomby. Uvidíme, 
+jak se to bude vyvíjet dál...;
+
+503 Potvor je stále více a více. Navíc jsem dnes potkal
+zelenýho slizouna. Pomalu se již začínám loučit s tou 
+truhlou plnou Becherovky. Ach, Becherovka, to jediný mě 
+nutí pokračovat. Doufám, že to budu moci někdy někomu
+vyprávět. Lesy v dnešní době už nejsou tak mírumilovné.;
+
+504 Velký pomník Bombičů. Bude to zřejmě sousoší na 
+počest některého z velkých válečníků. Mít tak jeho
+zkušenosti. To by se mit teď vážně hodilo. Počkat,
+pomník není na mapě. Doufám, že mám jen špatnou mapu.;
+
+505 Konečně jsem našel ten srub, ale nikdo tam nebyl! 
+Je prázdný. Chápete to!? Všechno bylo zbytečný. Všude je 
+jen spousta potvor. Před srubem se potulovala jedna
+obzvláště odporná. Ve srubu jsem objevil zásoby Becherovky. 
+Několik lahví jsem si přivlastnil a malinko si přihnul...;
+
+507 Chrrrrr Chrrrrrr Chrrrrr...;
+
+508 To byl ale sen. Skoro noční můra. Prostředí bych
+si nechal líbit. Ale ten duch, co tam byl. Naštěstí
+to šlo hladce. Už bych toho bombení měl nechat. 
+Začíná mi to lézt i do snů.
+
+   Poustevník tu není a čekat na něj v nebezpečném
+lese nehodlám. Tak asi půjdu domů. Když půjdu pěkně 
+zpátky, měla by to být vcelku bezpečná cesta.;
+
+510 Tady mi to není povědomé. Mám pocit, že jsem
+přišel jinudy. Nééé. Jsem ztracený v lese! 
+Mám plán. Půjdu pořád jedním směrem a pěkně
+rychle odsud vypadnu.;
+
+511 Chudák poustevník. Asi ho zabyl mráček, co
+tu kolem poletoval. Už vím, proč vzkaz pro něj
+zněl "Vykašli se na to, je to nebezpečné.";
+
+512 Kousíček vpředu je nějaká truhla. To bude asi
+to, co chtěl dostat ten poustevník. Když už jsem
+tu, tak se podívám, co v ní je. Ale musím nějak 
+přelstít toho ducha, co ji hlídá... Mám pocit, že 
+o tom duchovi se mi zdálo.; 
+
+513 Byl to souboj na život a na smrt. Když se mi 
+konečně tep srdce vrátil na normální hladinu, 
+zjistil jsem, že truhla je prázdná. Náhle jsem 
+si však všiml stop vedoucích od truhly směrem 
+k jeskyni. Tak se do ní tedy podíváme...;
+
+515 Hek Uh Uh Chrchl Chrchl... Příště musím...
+chrchl uh uh... být opatrnější...
+... Už vidím bíle světlo...;
+
+
+
+520 Kam ta jeskynně asi vede? Hned to zjistím.
+Zdá se být opuštěná. Ten kdo ukrad podklad tu
+někde bude. A až ho najdu, tak s ním zatočím...;
+
+521 To, co jsem našel v jeskyni bylo až neuvěři-
+telné. Tato na první pohled malá jeskyňka se zdá 
+být obrovským komplexem betonových chodeb. Nevím, 
+za jakým účelem by mohly být vybudovány ve skále 
+uprostřed pralesa. Ale pokusím se to zjistit.
+   Bohužel tu nejsem sám. Poznávám své staré známé 
+z pralesa. Naštěstí v těch bednách jsou skovaný 
+nový prýma věcičky.;
+
+522 Dnes mě málem převálcovaly nějaké ostnaté koule. 
+Valí se chodbou a odráží se od stěn. Možná se jedná 
+o nějaký druh pasti. Ale co má chránit? Ubylo taky 
+starých nepřátel. Asi sem jen někteří náhodou 
+vlezli z lesa.;
+
+523 Objevil jsem záhadný stroj. Zkoušel jsem
+ho prozkoumat, ale vůbec netuším, k čemu tu je.
+Měl jsem se ve škole víc učit. Mí staří 
+nepřátelé už docela zmizeli.;
+
+524 Narazil jsem na úplně nový druh potvory. 
+Velikostí i tvarem je stejná, jako ta v pralese, 
+ale zdá se být nějakým způsobem zmutovaná. 
+Má červenou barvu a vydrží víc. Jestli pěkně 
+rychle nenajdu cestu ven nebo alespoň nějakou 
+útěchu, tak brzo zcvoknu...;
+
+525 Copak jsem to objevil? Hmmmm. Ta vůně.
+Jak to tady mohl někdo nechat. Ale mám pocit,
+že to tu už moc dlouho ležet nebude.;
+
+526 Zííív. Chrupky. chrupky. chrupky.
+Chrrrrrrrrrrrrrrr;
+
+527 Mám pocit, že můj oblíbený nápoj na mě má
+při spánku zvláštní předzvěstné účinky. Jestli
+je to pravda, tak se mám na co těšit.;
+
+528 Začíná to tu být nějaké poškozené. Asi se
+blížím konci. Jen doufám, že ne svému. Narazil
+jsem na nějakou vylepšenou past. Zdá se, že 
+oplývá inteligencí. Začínám už pomalu cítit 
+lepší vzduch, než tu zatuchlinu všude okolo.;
+
+529 A jejda. Moje obavy se naplnily. Teď poznáš,
+co je to zběsilý kamikadze útok bombiče, ty jedna
+stará popelnice! Z tohoto souboje vyjde jen 
+jeden z nás živ. Doufám, že už máš pro sebe
+zajištěný odvoz na skládku.;
+
+530 Konečně. Opět na světle slunečním. Teď už
+můžu jít domů. A do hospůdky za kamarádama. 
+Škoda, že jsem si nevzal foťák. Už se nemůžu 
+dočkat...;
+
+
+
+540 Není to tu venku zrovna podle mých představ,
+ale hlavně, že tu je čertsvý vzduch a světlo.
+Nemeškejme a pojďme směrem k civilizaci. Už
+začínám mít abstinenční přiznaky - chybí mi 
+neagresivní televize a video. A dal bych si
+hranolky.;
+
+541 Ale ne. Jsou tady ti červení otrapové. Taková
+snadná kořist. Skoro se divím, že se tu nevyvinuli
+nějací predátoři, kteří by se těmi koulemi živili.
+Vždyť by je zvládla bombou usmažit i moje babička.;
+
+542 Ha - predátor je na světě. Sice nevypadá jako
+moje babička, ale drsný je dost. Viděl jsem ho 
+žrát červené koule. Jak mě zahlédl, tak toho nechal
+a běžel si pro mě. Štěstí, že je tak pomalý...;
+
+543 Tyhle svině už jsem jednou viděl. Taková přece byla
+v lese u chatky a málem mě tam dostala.  Ale tady jich
+je maličko víc. Snad to bude jen nějáký vzácný druh. 
+Radši vezmu nohy na ramena.;
+
+544 Zdá se, že někdo tady neuměl řídit. A když vylezli,
+tak jim život pouště asi moc času života nedal. 
+Na trupu jedné z lodí je napsáno:
+Expedice Moře Přání aneb štěstí pro každého. 
+Co to asi znamená? Kdo by hledal moře v poušti?;
+
+545 Že bych našel moře přání? Spíš oázka zaslíbení. 
+Už podle barvy hladiny je jasné, že tam asi není
+obyčejná voda. Ale něco daleko lepšího...;
+
+546 Chrrrrr Chrrrrrr Chrrrrr...;
+
+547 Sny jsou moc dobrá věc. Člověk aspoň tuší, do jakého
+průšvihu se řítí. Sice s tím moc nenadělám, ale budu se
+snažit. A mojí kůži nikdo lehko nedostane.;
+
+548 Hele studna. Naneštěstí vyschlá. Dřív tudy asi
+chodily karavany. To znamená, že jsem na cestě
+k civilizaci. Hned se mi jde lépe a radostněji.;
+
+549 Jak ho tak pozoruju, tak si říkám, že to asi 
+bude pěkně tvrdej týpek. A vůbec mi není sympatický.
+Zkusím s ním vyjednávat. Pochopitelně pomocí megabomb.;
+
+550 Velký zlý dudlík hlídal moře přání. Teď si asi můžu
+něco přát. Nemůžu nic vymyslet. Pořád se mi vrací doloka jen:
+
+BECHEROVKU PRO VŠECHNY A ZADARMO, A AŤ NIKDO NEODEJDE S PRÁZDNOU.;
+

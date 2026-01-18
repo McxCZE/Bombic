@@ -1,0 +1,327 @@
+1 Story;
+2 Deathmatch;
+3 Beenden;
+4 Gegner;
+5 Einstellungen;
+6 Hilfe;
+7 Credits;
+
+
+10 Kill'em all!;
+11 Anzahl der Spieler;
+12 Code;
+13 Zurück;
+
+
+20 Los gehts!;
+21 Anzahl der spieler;
+22 Gegner;
+23 Siege;
+24 Bonuslevel;
+25 Zurück;
+
+
+30 Sprache : Deutsch;
+31 Eingeschränktes Deathmatch;
+32 Uneingeschränktes Deadmatch;
+33 Sichtbare Explosionswahrscheinlichkeit;
+34 Unsichtbare Explosionswahrscheinlichkeit;
+35 Spielgeschwindigkeit;
+37 Im Fenster spielen;
+38 Vollbild spielen;
+42 Sound An;
+43 Sound Aus;
+36 Zurück;
+
+
+40 Pause;
+41 Leichen;
+
+
+
+60 Geschwindigkeit;
+61 KI Level;
+62 Veränderbar;
+63 Leben;
+
+
+70 Steuerung;
+71 1. Spieler;
+72 2. Spieler;
+73 3. Spieler;
+74 4. Spieler;
+75 Rechts;
+76 Links;
+77 Spielgeschwindigkeit;
+78 Pause;
+79 NumLock;
+
+
+100 Bombic;
+101 Grauer Ball;
+102 Schleimi;
+103 Wolkendunst;
+104 Geist;
+105 Falle;
+106 Roter Ball;
+107 Erweiterte Falle;
+108 TV;
+109 Sandgott;
+110 Mooner;
+111 Dummy;
+
+
+120 Friedliche Kreatur. Er ist glücklich mit seinen Freunden. 
+Er ist noch glücklicher, wenn er etwas gutes zum trinken hat.;
+121 Klein und doof. Er interessiert sich nur für essbares.;
+122 Er hasst Wasser. Deshalb ist er so schmutzig und wäscht sich
+nie. Noch niemand hat ihn sauber gesehen.;
+123 Friedliches, fliegendes Geschöpf. Leider ist es giftig - 
+sofern man es berührt.;
+124 Großer und starker Bösewicht. Es wäre praktisch nach ihm
+ Ausschau zu halten.;
+125 Klassische, gefährliche Falle - Großer, böser, rollender 
+Ball mit Stacheln;
+126 Familär verbandelt mit dem Grauem Ball. Aber mehr an das 
+wilde Leben angepasst.;
+127 Erweiterte Version des Balles. Er ist schneller und hat 
+einen Hitzedetektor.;
+128 Schlecht gelauntes Fernsehgerät. Es gab einen Kurzschluss 
+und TV drehte durch. Nimm dich vor seinen Blitzen in acht!;
+129 Verwandt mit Schleimi. Es nutzt zur Verteidigung eine Art 
+Fühler anstatt Schleim.;
+130 Schnell, hinderlistig und seeehr gefährlich. Es ist eine gute
+Idee wegzulaufen, weit wegzulaufen.;
+131 Der gemeinste Typ von allen. Er tötet jeden. Der fiesteste 
+der Fiesen.;
+
+
+500 Ich las gerade meine Zeitung - Meine Lieblingszeitung die 
+"Daily Bomb", als ich eine Anzeige fand. "Wir sind auf der Suche
+nach einem engagiertem Typ für einen Ausflug in den Wald. Er soll
+eine Nachricht an den Einsiedler übermitteln. Die Entlohnung 
+hierfür ist eine Kiste Becherovka.". Nun, ich hatte nichts weiter
+zu tun also entschied ich den Job zu übernehmen....;
+
+
+501 Sobald ich den Wald erreichte, attackierten mich schon einige
+bösartige Kreaturen. Es waren einige ekelhafte fliegende Köpfe 
+die mich erschreckten. Aber ich hatte meine Bomben ja bereit 
+zum Einsatz. Sie hatten keine Chance.;
+
+
+502 Ich gehe tiefer hinein und denke mir, dass es ein ganz schön
+harter Job werden wird. Die haben vergessen in ihrer Anzeige 
+diese Drecksviecher zu erwähnen. Da sollte mal jemand herkommen
+und hier ein wenig aufräumen. Glücklicherweise habe ich auf dem
+Weg einige nützliche Dinge gefunden. Diese haben meine Bomben 
+erweitert. Wir werden ja sehen wie es weitergeht.....;
+
+
+503 Man, da sind immer mehr von diesen bescheuerten Dingern auf 
+meinem Weg. Ich habe heute Bekanntschaft mit Schleimi gemacht, 
+er ist gar nicht so blöd wie ich dachte. Die Kiste Becherovka 
+ist das einzigste was mich diese Aufgabe fortführen lässt. 
+Immerhin ist hier mein Leben in Gefahr! Ich hoffe ich lebe lang
+genug um darüber erzählen zu können.;
+
+
+504 Eine große Bomber-Statue?! Diese Statue wurde sicherlich zu
+Ehren eines großen Bomber-Kriegers gebaut. Leider ist sein Name
+unleserlich. Ich wünschte ich hätte seine Fähigkeiten. Es würde
+mehr als nützlich sein. Halt, diese Statue ist nicht auf der 
+Karte! Ich hoffe sie haben mir die richtige Karte gegeben.;
+
+
+505 Endlich, ich habe die Hütte des Einsiedlers gefunden. Aber
+niemand ist da. Sie ist leer. Verstehst Du das? Die ganze Mühe 
+war umsonst. Nur überall bösartige Viecher! Ein extrem starkes 
+davon wandert vor der Hütte herum. Wow! Ich habe ein paar 
+Flaschen Becherovka gefunden. Ich werde mir die Freiheit nehmen
+ein paar von den Flaschen einzusacken. Mal eben so für den 
+guten Durst...;
+
+
+507 Zzzzzzzzz, zzzzzzzzz,zzzzzzzz...;
+
+
+508 Es war ein Traum. Eher ein Alptraum. Eigentlich sah alles 
+wunderschön aus, aber dieser Geist der da 
+herumirrte...Glücklicherweise war es kein großes Bemühen mit ihm
+fertig zu werden. Ich sollte mit diesem Bombenzeugs aufhören. Es
+passiert nun sogar schon in meinen Träumen.
+
+   Der Einsiedler ist verschwunden, so werde ich definitiv nicht
+länger an diesem ungemütlichem Ort verweilen. Es ist einfach zu
+gefährlich hier zu bleiben und zu warten. Auf nach Hause. 
+Es sollte ein einfacher Marsch zurück sein.;
+
+
+510 Irgendwie sieht das hier garnicht bekannt aus. Ich habe 
+irgendwie ein schlechtes Gefühl. Ich bin mir sicher, dass ich
+diesen Weg nicht zum ersten Mal gegangen bin. Neeeein - ich bin
+verloren. Was nun? Ich habe eine gute Idee. Ich werde einfach in
+diese Richtung laufen und hoffentlich das Ende dieses Waldes
+erreichen.;
+
+
+511 Der arme Einsiedler, die Wolke hat ihn sicher getötet. 
+Jetzt weis ich warum die Nachricht an ihn lautete: 
+"Tu es nicht. Es ist zu gefährlich!";
+
+
+512 Da! Da vorne liegt eine Kiste. Das ist bestimmt die, die der
+Einsiedler gesucht hatte. Da ich sie nun schon gefunden hatte, 
+kann ich auch einen Blick hinein riskieren. Zuvor muss ich aber
+diesen Geist loswerden, er bewacht die Kiste. Ich habe das Gefühl,
+dass ich von diesem Wesen schon einmal geträumt hatte.;
+
+
+513 Es war ein tödlicher Kamp. Als sich mein Puls wieder 
+normalisiert hatte, bemerkte ich, dass die Kiste leer war. 
+Aber ich fand immerhin Fußabdrücke die zu einer Höhle führten.
+Mal schauen was dort ist...;
+
+
+515 Würg Uh Uh Chrchl Chrchl... Nächstes Mal...
+chrchl uh uh... habe ich... hek..
+... vorsichtiger zu sein......aaahhrrr.....
+..Ich kann das Licht sehen!......;
+
+
+
+520 Ich frage mich, wohin diese Höhle führt. Ich werde es 
+sicherlich bald herausfinden. Der Typ der den Schatz aus der 
+Kiste gestohlen hat wird sicherlich hier irgendwo sein.;
+
+
+521 Es ist unglaublich. Es sieht so aus, als wenn diese kleine
+Höhle in Wahrheit ein großer Komplex voller Korridore ist. 
+Ich hab absolut keine Ahnung warum irgendjemand dieses Teil in
+der Mitte des Waldes errichtet hat. Ich werde einfach versuchen
+es herauszufinden.
+
+  Leider sieht es gar nicht so aus, als wenn ich alleine hier 
+bin. Ich habe bereits meine alten "Freunde" wiedergetroffen. 
+Aber auch einige gute Dinge - gute Dinge um die Viecher 
+endgültig zu beseitigen.;
+
+
+522 Ich wurde beinhae von irgendwelchen rollenden Steinen mit
+Stacheln erwischt. Sie ändern die Richtung wenn sie an eine 
+Wand prallen - vielleicht ist es eine Art von Falle??!! Aber was
+soll es beschützen Meine alten Feinde verschwanden. Nur ein paar
+könnten vielleicht die Höhle betreten haben.;
+
+
+523 Ich habe eine mysteriöse Maschine gefunden. Ich habe 
+versucht sie ein wenig zu erforschen, habe sie aber nicht 
+verstanden. Ich wünschte ich hätte mehr in der Schule aufgepasst.
+Meine alten Feinde sind Vergangenheit.
+
+
+524 Meine Wege haben sich mit einem neuem Feind gekreuzt. 
+Seine Größe und seine Form sind ähnlich dem einem aus dem Wald,
+aber er scheint irgendwie mutiert zu sein. Er hat eine rote
+Farbe und ist ein ganzes Stück schwerer zu besiegen. Wenn ich
+keinen Weg finde hier herauszukommen - Hmm, dann werde ich
+sicherlich verrückt werden.;
+
+
+525 Oh! Was haben wir denn da? Hmm, was für ein wohltuender 
+Geruch !!! Wie kann jemand soetwas hier vergessen?! 
+Ich werde hier nicht allzulange verweilen - das ist sicher....;
+
+
+526 Hmmmm. Lecker...mampf...;
+
+
+527 Es schaut so aus als wenn mein Lieblingsgetränk irgendwie 
+eine abnormale Wirkung auf mich ausübt. Normalerweise würde 
+ich DAS nicht mögen.;
+
+
+528 Irgendwie sieht alles immer mehr zerstört aus. Ich komme 
+sicherlich immer naher ans Ende. Hoffentlich nicht auch mein 
+Ende. Ich habe eine Spezialfalle gesehen. Sie hat eine bessere
+Software und sie ist ein ganzes Stück schneller.;
+
+
+529 Oh mein... das Monster aus meinem Alptraum. Nun wirst Du
+sehen wie mein Kamikadzeangriff dich alten Fernsehr noch älter
+aussehen lassen wird. Nur einer von uns kann hier lebend 
+herauskommen - und ich plane nicht zu sterben.;
+
+
+530 Na endlich. Ich kann das Sonnenlicht wieder sehen. Und nun
+nichts wie ab nach hause - in die örtliche Kneipe. Ich freue 
+mich schon meine ganzen Kumpels wieder zu sehen.;
+
+
+540 Irgendwie habe ich ein anderes Gefühl erwarten, aber immerhin
+scheint die Sonne und ich kann wieder frische Luft atmen. Ich
+hoffe ich komme bald zurück in die Zivilisation. Ich vermisse
+meinen Fernsehr und meinen Videorekorder. Und ich will einen 
+Hamburger mit Cola...und meinen heissgeliebten Becherovka.;
+
+
+541 Oh nein. Diese roten Monster sind langweilig. Ich frage mich
+warum hier keine mächtigeren Kreaturen sind. Diese hier sind 
+einfach nur blöd! Sogar meine Großmutter könnte sie fertig machen.;
+
+
+542 Oh da ist ein Raubtier. Es schaut zwar nicht aus wie meine
+Oma, aber es ist stark genung. Ich habe gesehen wie er das rote
+Monster gefressen hat, leider hat er auch mich gesehen und
+nun jagt er mich. Glücklicherweise ist er ein wenig langsam.;
+
+
+543 Irgendwo habe ich so ein Ding schon einmal gesehen. Genau!
+Dieses Vieh war vor der Hütte des Einsiedlers und es hatte mich
+beinahe erwischt. Ich hoffe sie sind selten. Ich will denen
+nie wieder gegenüber stehen. Ich werde wohl versuchen den Kontakt
+mit ihnen zu vermeiden.;
+
+
+544 Es scheint als wenn jemand absolut nicht weiss, wie man ein
+Boot zu bedienen hat! Und als diejenigen aus der Wüste kamen 
+haben sie dem Boot keinerlei weitere Beachtung geschenkt.
+Da ist etwas auf dem Rumpf geschrieben. 'Expedition: See der 
+Wünsche. Glückseeligkeit für jeden'. Was könnte das bedeuten? 
+Wer könnte in mitten einer Wüste nach einem See suchen?;
+
+
+545 Wow, kann es sein? Kann ich den See der Wünsche wirklich 
+gefunden haben? Von der Farbe her ist es sicherlich
+kein Wasser.
+Riechst Du es? Ohhh jaaa. Das hier riecht vieeel besser...;
+
+
+546 Chrrrrr Chrrrrrr Chrrrrr...;
+
+
+547 Träume sind eine wirklich gute Sache. Zumindest weiss ich nun
+in welchen Schlamassel ich hereinraten werde. Ich kann
+nichts daran ändern - aber ich werde  nicht aufgeben. Ich werde
+mich von niemanden so einfach töten lassen.;
+
+
+548 Sieh was ich gefunden habe. Einen Brunnen. Aber er ist leider
+ausgetrocknet. Karawanen haben ihn vielleicht auf ihren Reisen
+benutzt...Ich komme der Zivilisation immer näher. Plötzlich bin
+ ich aber in gänzlich besserer Gesellschaft...;
+
+
+549 Wenn ich ihn mir so näher anschaue, sieht er wirklich wie 
+ein richtig fieser Kerl aus. Er schaut keinesfalls freundlich
+aus! Ich werde versuchen mit ihm zu verhandeln - mit meinen
+Bomben natürlich.;
+
+
+550 Dieser fiese Teufel hat den See der Wünsche bewacht. Nun
+kann ich mir alles mögliche wünschen. Das einzigste an was
+ich denken kann ist:
+
+
+BECHEROVKA FÜR JEDEN UND UMSONST. 
+LASST NIEMANDEN MIT LEEREN HÄNDEN ZURÜCK;

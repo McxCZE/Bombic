@@ -1,0 +1,31 @@
+ 27
+
+ mapA1.ble  8   NOCODE   11 -1 1    1   500  -1 515 1
+ mapA2.ble  8   EASYLV   12 -1 1    1   501  -1 515 1
+ mapA3.ble  8   TROUBL   13 -1 1    2   502  -1 515 1
+ mapA4.ble  9   MONUMT   14 -1 1    2   503  -1 515 1
+ mapA5.ble  9   LOGHUT   15 15 1    2   504 505 515 1
+ mapA6.ble  9   DREAMA   16 -1 1    2   507  -1 515 0
+ mapA7.ble  10  ANLEVL   17 -1 1    2   508  -1 515 1
+ mapA8.ble  10  DEDBOD   18 17 1    3   510 511 515 1
+ mapA9.ble  11  BGHOST   19 19 1    4   512 513 515 1
+
+ mapB1.ble  12  INBASE   21 -1 2    4   520  -1 515 1
+ mapB2.ble  12  IQTRAP   22 -1 2    5   521  -1 515 1
+ mapB3.ble  12  MACHIN   23 -1 2    5   522  -1 515 1
+ mapB4.ble  13  NORMLV   24 -1 2    6   523  -1 515 1
+ mapB5.ble  13  BSTORE   25 25 2    6   524 525 515 1
+ mapB6.ble  13  ANODRM   26 -1 2    6   526  -1 515 0
+ mapB7.ble  14  BLHOLE   17 -1 2    7   527  -1 515 1
+ mapB8.ble  14  BASLVL   28 -1 2    7   528  -1 515 1
+ mapB9.ble  14  TVBOSS   29 29 2    8   529 530 515 1
+
+ mapC1.ble  15  DESERT   31 -1 3    8   540  -1 515 1
+ mapC2.ble  15  CRSAND   32 -1 3    9   541  -1 515 1
+ mapC3.ble  15  MOONCR   33 -1 3   10   542  -1 515 1
+ mapC4.ble  15  UFOUFO   34 -1 3   10   543  -1 515 1
+ mapC5.ble  15  BOASIS   35 35 3   10   544 545 515 1
+ mapC6.ble  15  VISION   36 -1 3   10   546  -1 515 0
+ mapC7.ble  15  OLDWEL   17 -1 3   10   547  -1 515 1
+ mapC8.ble  15  LVLXYZ   38 -1 3   10   548  -1 515 1
+ mapC9.ble  15  THEEND   39 39 3   11   549 550 515 1

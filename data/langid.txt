@@ -1,0 +1,4 @@
+en.txt
+cz-utf8.txt
+de-utf8.txt
+pl-utf8.txt

@@ -1,0 +1,268 @@
+0 Jazyk/Language: English;
+
+1 Story;
+2 Deathmatch;
+3 Quit;
+4 Monsters;
+5 Settings;
+6 Help;
+7 Credits;
+
+10 Kill 'em all!;
+11 Number of players;
+12 Code;
+13 Back;
+
+20 Fight!;
+21 Number of players;
+22 Monsters;
+23 Victories;
+24 Bonus level;
+25 Back;
+
+30 Language : English;
+31 Limited deathmatch;
+32 Unlimited deadmatch;
+33 Visible explosion presumption;
+34 Invisible explosion presumption;
+35 Game speed;
+37 Play in window;
+38 Play in fullscreen;
+42 Sound On;
+43 Sound Off;
+36 Back;
+
+40 Pause;
+41 Corpses;
+
+
+60 Speed;
+61 AI Level;
+62 Variable;
+63 Lives;
+
+70 Controls;
+71 1. Player;
+72 2. Player;
+73 3. Player;
+74 4. Player;
+75 Right;
+76 Left;
+77 Game speed;
+78 Pause;
+79 NumLock;
+
+100 Bombic;
+101 Grey ball;
+102 Slimer;
+103 Clouder;
+104 Ghost;
+105 Trap;
+106 Red ball;
+107 Advanced trap;
+108 TV;
+109 Sandmaster;
+110 Mooner;
+111 Dummy;
+
+120 Peacefull creature. It is happy with his friends.
+He likes it even more when he has something good to drink.;
+121 Small and stupid. It cares only about
+something to eat.;
+122 It hates water. That is why it is so dirty and
+it never washes. Nodody has ever seen it clean.;
+123 Peacefully flying creature. Unfortunately
+it is poisonous when you touch it.;
+124 Large and strong bad guy. It is good idea
+to watch out for him.;
+125 Classic dangerous trap - Big bad rolling 
+ball with spikes.;
+126 Family related to the Grey ball.
+But more adapted for wild life.;
+127 Advanced version of the rolling ball. It is faster
+and it has a heat detector.;
+128 Bad-mannered TV set. There was a short
+circuit and TV revived. Watch out for its lightning.;
+129 Related to the Slimer.
+It uses its horns instead of slime for defense.;
+130 Fast, insidious and very dangerous.
+It is good idea to run away. Far away.; 
+131 The meanest bad guy of them all. It kills everyone.
+The meanest from the meaniest.;
+
+500 Once I was reading my newspapers. My favorite 
+Daily Bomb. I found an advertisement: "We are searching
+for a courageous one for trip to the forest. We want
+him to deliver a message to the hermit. The reward shall 
+be a chest of Becherovka". Well, I had nothing else to do 
+so I decided to go...;
+
+501 As soon as I reached the forest, i was attacked by
+some enemy creatures. Some disgusting flying heads.
+They scared me. But I had my bombs ready to use. They
+had no chance.;
+
+502 I'm going deeper and I'm thinking it is going to be 
+a hard job. They forgot to mention these creatures in 
+the advertisement. Someone should come here and clean
+it up. Fortunately I have found some bonuses on the way. 
+They have upgraded my bombs. We will see how it will 
+continue.....;
+
+503 There are more and more of those stupid creatures 
+along the way. But I met the Slimer today. He isn't
+as stupid as I thought. Becherovka is the only thing that 
+makes me continue in this quest where my life is at stake. 
+I hope I'm going to live long enough to tell about it.;
+
+504 Great statue of Bombers. This group of statues
+was probably built to commemorate some great bomber 
+warrior. Unfortunately his name is unreadable. I wish 
+I had his skills. It would be very useful. Wait. This 
+memorial isn't on the map! I hope they have given me the 
+right map.;
+
+505 At last. I have found the hermit's cabin but nobody was 
+there. It was empty. Do you understand it? The whole effort 
+was for nothing. There are only enemy creatures all around. 
+There was one extremely strong wondering infront of the cabin.
+   Wow! I have just found some supplies of Becherovka. I took 
+the liberty of keeping some of the bottles. Just for taste...;
+
+507 Zzzzzzzzz, zzzzzzzzz,zzzzzzzz...;
+
+508 It was a dream. Almost a nightmare. The surrounding was 
+beautiful. But what about the ghost that was there. Fortunately
+it wasn't a hard job to deal with. I should stop with this 
+bombing stuff. It starts getting into my dreams.
+
+   The hermit disappeared so I'm definitely not staying any 
+longer on this place. It is far too dangerous to stay here and 
+wait. Let's go home. It should be an easy way back.;
+
+510 It doesn't look familiar here. I have a bad feeling about this. 
+I sure haven't gone this way the first time. Noooo - I'm lost.
+Now what? I have got a good idea. I'll keep heading in this 
+direction and hopefully I'll reach the end of this forest.;
+
+511 Poor fellow hermit. The Cloud probably killed him. 
+Now I know why the message for him was: "Don't do it. 
+It is too dangerous.";
+
+512 There in front of me I see a chest. It is probably 
+the one, for which the hermit was searching for. Since 
+I already found it I'll look what's inside. But I have 
+to get rid of that ghost who is guarding it first.
+I have a feeling I had a dream about this creature.;
+
+513 It was a mortal kombat. When my pulse returned to normal,
+I realized, that the chest is empty. But I have found 
+footprints leading to the cave. Let's go there...;
+
+515 Hek Uh Uh Chrchl Chrchl... Next time...
+chrchl uh uh... I have to be... hek...
+... more careful... aaahhrrr...
+... I can see the light...;
+
+
+520 I wonder where does this cave lead to. I'll reveal 
+it soon. The guy who stole the treasure from the chest 
+will probably be there.;
+
+521 It is unbelievable. It looks like this small cave 
+is in fact a large complex full of corridors. I have no 
+idea, why someone created this complex in the middle of 
+a forest. I'll try to find out.;
+  Unfortunately it looks like I'm not alone here. I met 
+my old "friends" - again. But I also found some good 
+stuff - good stuff for finishing them off.;
+
+522 I was almost killed by some rolling stones with spikes. 
+They change direction when they reach a wall - maybe it's 
+some sort of a trap ??!! But what is it supposed to guard;
+My old enemies disappeared as well. Only some of them probably
+entered the cave from the forest entrance.;
+
+523 I have found a mysterious machine. I have tried to 
+explore it further, but have been unable to recognize it.
+I wish I paid more attention while studying at school.;
+My old enemies are history.; 
+
+524 I crossed paths with a new kind of enemy. It's size 
+and shape is similar to the one in the forest, but it 
+seems to be mutated somehow. It has a red color and it's 
+much harder to kill. If I don't find a way out of this 
+place - well, I'll go nuts that's for sure.;
+
+525 Oh. What have we here? Hmmm. What a pleasent smell !!! 
+How could someone possibly forget something like this over here. 
+It won't stay here for long that's for sure...;
+
+526 Mmm. Tasty... yammy...;
+
+527 It looks like my favorite drink has special effect on me. 
+If I'm right then I won't like this.;
+
+528 It's starting to be somewhat damaged in here. I'm surely 
+getting nearer to the end. Hope it won't be my end though.
+I saw a special trap. It has a better software and it's a lot 
+faster.;
+
+529 Oh my... my nightmare monster. Now you'll see what my 
+kamikadze attack looks like you old TV. Only one of us can 
+get through this alive and I'm not planning on dying.;
+
+530 At last. I can see the sunshine again. And now let's 
+go home - to our local pub. I'm looking forward to seeing 
+my old friends;
+
+540 I was expecting a different feeling, but at least
+the Sun is shining and I can breath fresh air again. 
+I hope I'll get to the civilization soon. I'm missing 
+TV and video. And I want hamburger and cola...and my 
+favourite Becherovka;
+
+541 Oh no. These red creatures are boring. I wonder 
+why there isn't any more powerfull creature. These 
+are really stupid. My grandmother would kill them 
+easily.;
+
+542 Ha the predator is here. He doesn't look like my 
+grandma but he is strong enough. I saw him eating the 
+red creature but it saw me and it started to hunt me. 
+Fortunately it is a bit slow.;
+
+543 I have seen something like this before. Oh yes. This 
+creature was in front of hermit's cabin and it almost got me. 
+I hope they are rare. I don't want to face them any more. I'll 
+rather try to avoid contact with them;
+
+544 It looks like someone sure didn't know what how to ride on 
+a boat!. And when they got out the desert didn't give them 
+much of a chance either. There is something written on the hull.
+"Expedition sea of wishes. Happiness for everyone".
+What does it mean? Who could be searching for sea in the middle 
+of a desert?;
+
+545 Wow. Could I have found the sea of wishes. Judging from it's color
+it is obvious that it isn't water.; 
+   Do you smell it? Oh yes. This one smells much better...;
+
+546 Chrrrrr Chrrrrrr Chrrrrr...;
+
+547 Dreams are such a good thing. At least I know what kind of trouble 
+am I getting into. I can't do much with it. But I won't give up.
+I won't let anyone kill me easily.;
+
+548 Look what I have found. A well. But it has run dry. Caravans 
+probably use to travel this way... I'm getting nearer to
+civilization. Suddenly I'm in much better mood...;
+
+549 As I'm watching him he looks like a realy bad guy. He sure 
+doesn't look friendly. I'll try to negotiate - using my bombs 
+of course.; 
+
+550 The Great evil hero was guarding the sea of wishes. 
+No I can wish for something. The only thing I can think of is this:
+
+BECHEROVKA FOR EVERYONE AND FOR FREE. DON'T LET ANYONE LEAVE EMPTY HANDED;

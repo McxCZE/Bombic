@@ -1,0 +1,17 @@
+#!/bin/bash
+# Bombic Native - Install script
+
+set -e
+cd "$(dirname "$0")"
+
+if [ ! -f build/src/bombic ]; then
+    echo "Nejdřív spusť ./build.sh"
+    exit 1
+fi
+
+echo "Instaluji Bombic do /usr/local/..."
+cd build
+sudo make install
+
+echo ""
+echo "Hotovo! Spusť hru příkazem: bombic"
