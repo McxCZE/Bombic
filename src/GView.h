@@ -18,6 +18,7 @@ class GObject;
 class GView : public GBase
 {
 public:
+	using GBase::Init;  // Bring base class Init into scope
 	virtual void Destroy();
 	void StartTres(int doba);
 	void UpdateView();

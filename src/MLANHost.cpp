@@ -58,8 +58,8 @@ static void GetLocalIP(char* buffer, size_t bufsize)
 
 			// Skip loopback
 			if (strcmp(ip, "127.0.0.1") != 0) {
-				strncpy(buffer, ip, bufsize);
-				buffer[bufsize-1] = '\0';
+				strncpy(buffer, ip, bufsize - 1);
+				buffer[bufsize - 1] = '\0';
 				break;
 			}
 		}

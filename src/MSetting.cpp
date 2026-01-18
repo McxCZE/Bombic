@@ -74,7 +74,7 @@ int MSetting::OnKey(int nChar)
 	switch (nChar) {
 	case SDLK_DOWN   : if (++m_sel > MAX_SETTING_SEL-1) m_sel = 0; g_sb[0].Play();  break;
 	case SDLK_UP     : if (--m_sel < 0) m_sel = MAX_SETTING_SEL-1; g_sb[0].Play();  break;
-	case SDLK_RETURN : 
+	case SDLK_RETURN :
 	case SDLK_SPACE  :
 		g_sb[0].Play();
 		switch (m_sel) {
@@ -84,10 +84,9 @@ int MSetting::OnKey(int nChar)
 		//	cerr << "Not yet :-)" << endl;
 			break;
 		case 6:
-			return MENU_MAIN; 
-			break;
-
+			return MENU_MAIN;
 		}
+		[[fallthrough]];
 	case SDLK_RIGHT :
 		switch (m_sel) {
 		case 0 :

@@ -117,18 +117,16 @@ bool HDSoundBuffer::LoadFromRes(const char *resname)
 	return true;
 }
 
-void HDSoundBuffer::SetPan(int pan)
+void HDSoundBuffer::SetPan(int /*pan*/)
 {
 }
 
-void HDSoundBuffer::SetFreq(int freq)
+void HDSoundBuffer::SetFreq(int /*freq*/)
 {
-
 }
 
-void HDSoundBuffer::SetVolume(int volume)
+void HDSoundBuffer::SetVolume(int /*volume*/)
 {
-
 }
 
 void HDSoundBuffer::Stop()

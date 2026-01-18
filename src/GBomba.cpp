@@ -32,6 +32,8 @@ void GBomba::Draw(int x, int y, int bx, int by)
 		std::cerr << "Invalid bomb draw call" << std::endl;
 		return;
 	}
+#else
+	(void)x; (void)y;  // Silence unused parameter warnings in release mode
 #endif
 	if (m_bombtime <= BOMBTIME) {
 		d3dx.Draw(m_bBmp_s, bx+m_x-25, by+m_y-25, 0, m_size, m_size, 128, 6-(m_bombtime*7)/BOMBTIME, m_shy);

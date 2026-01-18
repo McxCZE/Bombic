@@ -36,9 +36,8 @@ void GBonus::Init(int mx, int my, GBonus **self, int bBonusy)
 	m_bBmp = bBonusy;
 }
 
-void GBonus::BeforeMove(float *speed)
+void GBonus::BeforeMove(float* /*speed*/)
 {
-
 }
 
 void GBonus::DrawOnGround(int x, int y)
@@ -46,9 +45,8 @@ void GBonus::DrawOnGround(int x, int y)
 	d3dx.Draw(m_bBmp, x, y, 0, 1, 1, 255, m_shx, m_shy);
 }
 
-void GBonus::DrawOnPlayer(int x, int y)
+void GBonus::DrawOnPlayer(int /*x*/, int /*y*/)
 {
-
 }
 
 void GBonus::Move()
@@ -86,9 +84,8 @@ void GBonus::OneTime()
 
 }
 
-void GBonus::BeforeInput(bool *left, bool *right, bool *up, bool *down, bool *action)
+void GBonus::BeforeInput(bool* /*left*/, bool* /*right*/, bool* /*up*/, bool* /*down*/, bool* /*action*/)
 {
-
 }
 
 GBonus* GBonus::GetCopy()
@@ -106,7 +103,6 @@ bool GBonus::HitProtect()
 	return false;
 }
 
-void GBonus::AfterPut(int bombID)
+void GBonus::AfterPut(int /*bombID*/)
 {
-
 }

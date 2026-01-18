@@ -42,9 +42,9 @@ public:
 
 	virtual void Init(CMainFrame *parent);
 
-	virtual int  OnKey(int nChar) {	return MENU_DEFAULT; };
-	virtual void Draw() {};
-	virtual void Move() {};
+	virtual int  OnKey(int /*nChar*/) { return MENU_DEFAULT; }
+	virtual void Draw() {}
+	virtual void Move() {}
 
 protected:
 	CMainFrame *m_pParent;

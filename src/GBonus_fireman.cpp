@@ -31,7 +31,7 @@ bool GBonus_fireman::HitProtect()
 	return true;
 }
 
-void GBonus_fireman::BeforeInput(bool *left, bool *right, bool *up, bool *down, bool *action)
+void GBonus_fireman::BeforeInput(bool* /*left*/, bool* /*right*/, bool* /*up*/, bool* /*down*/, bool *action)
 {
 	// Fireman bonus: action key creates instant explosion at player position
 	// In LAN mode, both machines run this independently based on shared input

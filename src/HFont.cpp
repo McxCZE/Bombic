@@ -158,11 +158,11 @@ HFont::~HFont()
 
 
 // Special for menu drawing - draws HFONT_CENTER
-void HFont::MenuText(int x, int y, const std::string text, int ID, int sel, int flags)
+void HFont::MenuText(int x, int y, const std::string text, int ID, int sel, int /*flags*/)
 {
 	if (sel == ID)
 		DrawText( x, y, text.c_str(), 200, 200, 0,  HFONT_CENTER);
-	else 
+	else
 		DrawText( x, y, text.c_str(), 255, 255, 255,  HFONT_CENTER);
-};
+}
 

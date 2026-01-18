@@ -266,7 +266,7 @@ void HD3DX::Draw(int sprite, float x, float y, float angle, float sx, float sy, 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-void HD3DX::Draw(int sprite, int x, int y, float angle, float sx, float sy, int alpha, int shx, int shy)
+void HD3DX::Draw(int sprite, int x, int y, float /*angle*/, float /*sx*/, float /*sy*/, int alpha, int shx, int shy)
 {
 	if (m_text[sprite].type == TEXTURE_NONE) {
 		return;

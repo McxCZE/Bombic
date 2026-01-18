@@ -40,7 +40,7 @@ void MIntro::Init(CMainFrame *parent)
 	m_screen = 0;
 }
 
-int MIntro::OnKey(int nChar)
+int MIntro::OnKey(int /*nChar*/)
 {
 	m_pParent->StartMenu();
 	return 0;

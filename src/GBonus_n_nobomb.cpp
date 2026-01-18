@@ -26,7 +26,7 @@ GBonus_n_nobomb::~GBonus_n_nobomb()
 
 }
 
-void GBonus_n_nobomb::BeforeMove(float *speed)
+void GBonus_n_nobomb::BeforeMove(float* /*speed*/)
 {
 	m_bomber->m_action = false;
 }

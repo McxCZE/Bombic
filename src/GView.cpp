@@ -40,9 +40,8 @@ void GView::Init(CMainFrame *parent, GGame *game)
 	m_bBonus  = d3dx.CreateVirualTexture(m_game->m_bBombaBMP, 1, 427,  24, 24);
 }
 
-void GView::LoadMap(st_map *map)
+void GView::LoadMap(st_map* /*map*/)
 {
-
 }
 
 

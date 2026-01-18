@@ -45,7 +45,7 @@ void MHelp::Init(CMainFrame *parent)
 	m_bPozadi = d3dx.CreateTextureFromFile("mhelp.jpg");
 }
 
-int MHelp::OnKey(int nChar)
+int MHelp::OnKey(int /*nChar*/)
 {
-	return MENU_MAIN; 
+	return MENU_MAIN;
 }

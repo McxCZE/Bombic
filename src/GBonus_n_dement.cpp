@@ -26,7 +26,7 @@ GBonus_n_dement::~GBonus_n_dement()
 
 }
 
-void GBonus_n_dement::BeforeMove(float *speed)
+void GBonus_n_dement::BeforeMove(float* /*speed*/)
 {
 	switch (m_bomber->m_dir) {
 	case 1: m_bomber->m_dir = 2; break;

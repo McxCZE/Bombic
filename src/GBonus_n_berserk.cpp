@@ -26,7 +26,7 @@ GBonus_n_berserk::~GBonus_n_berserk()
 
 }
 
-void GBonus_n_berserk::BeforeMove(float *speed)
+void GBonus_n_berserk::BeforeMove(float* /*speed*/)
 {
 	m_bomber->m_action = true;
 }
