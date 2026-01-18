@@ -6,6 +6,7 @@
 5 Ustawienia;
 6 Pomoc;
 7 Autorzy;
+8 LAN;
 
 10 Rozpoczęcie!;
 11 Liczba graczy;
@@ -50,6 +51,18 @@
 77 Prędkość gry;
 78 Pauza;
 79 NumLock;
+
+80 Hostuj grę;
+81 Dołącz do gry;
+82 Powrót;
+83 Oczekiwanie na gracza...;
+84 Gracz połączony!;
+85 Rozpocznij grę;
+86 Adres IP;
+87 Łączenie...;
+88 Mapa;
+89 Gotowy;
+90 Nie gotowy;
 
 100 Bombic;
 101 Szara kula;

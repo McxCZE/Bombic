@@ -7,6 +7,7 @@
 5 Nastavení;
 6 Nápověda;
 7 Autoři;
+8 LAN;
 
 10 Hrrr na ně!;
 11 Počet hráčů;
@@ -51,6 +52,18 @@
 77 Rychlost hry;
 78 Pauza;
 79 NumLock;
+
+80 Hostit hru;
+81 Připojit se;
+82 Zpět;
+83 Čekám na hráče...;
+84 Hráč připojen!;
+85 Spustit hru;
+86 IP Adresa;
+87 Připojuji se...;
+88 Mapa;
+89 Připraven;
+90 Nepřipraven;
 
 100 Bombič;
 101 Koule hnědá;

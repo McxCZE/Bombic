@@ -17,6 +17,13 @@
 #include "MHelp.h"
 #include "MSetting.h"
 #include "MCredits.h"
+#ifdef HAVE_SDL2_NET
+#include "MLAN.h"
+#include "MLANHost.h"
+#include "MLANJoin.h"
+#include "MLANLobby.h"
+#include "MLANPlaying.h"
+#endif
 
 
 
@@ -42,6 +49,13 @@ public:
 	MHelp          m_Mhelp;
 	MSetting       m_Msetting;
 	MCredits       m_Mcredits;
+#ifdef HAVE_SDL2_NET
+	MLAN           m_Mlan;
+	MLANHost       m_MlanHost;
+	MLANJoin       m_MlanJoin;
+	MLANLobby      m_MlanLobby;
+	MLANPlaying    m_MlanPlaying;
+#endif
 
 	int m_bMenuBMP;
 	int m_bLogo;

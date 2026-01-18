@@ -4,11 +4,15 @@
 
 #include <string>
 #include <stdio.h>
+#include <cstdlib>
 #include "stdafx.h"
 #include "D3DXApp.h"
 #include "GGame.h"
 #include "MainFrm.h"
 #include "GFile.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 using namespace std;
@@ -31,7 +35,7 @@ const int stratpoints[MAX_BOMBERS][2] = {
 
 GGame::GGame()
 {
-
+	m_networkMode = GAME_MODE_LOCAL;
 }
 
 GGame::~GGame()
@@ -116,10 +120,53 @@ void GGame::Move()
 	int i;
 	dinput.Update();
 
+#ifdef HAVE_SDL2_NET
+	// LAN mode: update network
+	if (m_networkMode == GAME_MODE_LAN) {
+		g_network.Update();
+
+		// Client: check if host ended the round
+		if (g_network.IsClient() && g_network.HasRoundEnded()) {
+			// Host ended the game - end client's game too
+			m_gameended = true;
+			m_pParent->StartMenu();
+			return;  // Don't process any more this frame
+		}
+	}
+#endif
+
 	// Zmeny ve hre - posuny
 	for (i = 0; i < m_bombers; i++) {
-		m_bomber[i].Input( B(dinput.m_key[controls[i][0]]), B(dinput.m_key[controls[i][1]]),
-			B(dinput.m_key[controls[i][2]]), B(dinput.m_key[controls[i][3]]), B(dinput.m_key[controls[i][4]]));
+#ifdef HAVE_SDL2_NET
+		if (m_networkMode == GAME_MODE_LAN) {
+			// LAN mode: local player uses keyboard, remote player uses network input
+			int localPlayerID = g_network.GetLocalPlayerID();
+			int remotePlayerID = g_network.GetRemotePlayerID();
+
+			if (i == localPlayerID) {
+				// Local player - use keyboard (always arrow keys in LAN mode since player is alone)
+				// and send input over network
+				bool left = B(dinput.m_key[controls[0][0]]);
+				bool right = B(dinput.m_key[controls[0][1]]);
+				bool up = B(dinput.m_key[controls[0][2]]);
+				bool down = B(dinput.m_key[controls[0][3]]);
+				bool action = B(dinput.m_key[controls[0][4]]);
+
+				m_bomber[i].Input(left, right, up, down, action);
+				g_network.SendInput(left, right, up, down, action);
+			} else if (i == remotePlayerID) {
+				// Remote player - use network input
+				bool left, right, up, down, action;
+				g_network.GetRemoteInput(left, right, up, down, action);
+				m_bomber[i].Input(left, right, up, down, action);
+			}
+		} else
+#endif
+		{
+			// Local mode - all players use keyboard
+			m_bomber[i].Input( B(dinput.m_key[controls[i][0]]), B(dinput.m_key[controls[i][1]]),
+				B(dinput.m_key[controls[i][2]]), B(dinput.m_key[controls[i][3]]), B(dinput.m_key[controls[i][4]]));
+		}
 		m_bomber[i].Move();
 	}
 
@@ -145,11 +192,27 @@ void GGame::Move()
 		m_bomber[i].Hit();
 	}
 
-	if (EndGame()) 
-		if (--m_gameendig <= 0) {
-			m_gameended = true;
-			m_pParent->StartMenu();
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only the host can end the game
+	// Client waits for round end packet from host
+	if (m_networkMode == GAME_MODE_LAN) {
+		if (g_network.IsHost() && EndGame()) {
+			if (--m_gameendig <= 0) {
+				m_gameended = true;
+				m_pParent->StartMenu();
+			}
 		}
+		// Client: game ends when m_gameended is set by MLANPlaying upon receiving round end packet
+	} else
+#endif
+	{
+		// Local mode: normal end game check
+		if (EndGame())
+			if (--m_gameendig <= 0) {
+				m_gameended = true;
+				m_pParent->StartMenu();
+			}
+	}
 
 	// dame hraci moznost upravovat rychlost hry pri hre
 	if (dinput.m_key[SDL_SCANCODE_EQUALS]) if ((gspeed += 0.05f) > 4) gspeed = 4;
@@ -207,6 +270,19 @@ void GGame::LoadMap(const string file, int players, bool deadmatch, bool monster
 	int i, j;
 
 	m_deadmatch = deadmatch;
+
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, use deterministic random seed for synchronized simulation
+	// Both host and client will generate the same random sequences
+	if (m_networkMode == GAME_MODE_LAN) {
+		// Use a simple hash of the filename as seed
+		unsigned int seed = 12345;
+		for (size_t k = 0; k < file.length(); k++) {
+			seed = seed * 31 + (unsigned char)file[k];
+		}
+		srand(seed);
+	}
+#endif
 
 	GFile::LoadMap(&map, file);
 

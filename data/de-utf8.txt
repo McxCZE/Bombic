@@ -5,6 +5,7 @@
 5 Einstellungen;
 6 Hilfe;
 7 Credits;
+8 LAN;
 
 
 10 Kill'em all!;
@@ -56,6 +57,17 @@
 78 Pause;
 79 NumLock;
 
+80 Spiel hosten;
+81 Spiel beitreten;
+82 Zurück;
+83 Warte auf Spieler...;
+84 Spieler verbunden!;
+85 Spiel starten;
+86 IP Adresse;
+87 Verbinde...;
+88 Karte;
+89 Bereit;
+90 Nicht bereit;
 
 100 Bombic;
 101 Grauer Ball;

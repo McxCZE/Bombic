@@ -8,7 +8,11 @@
 
 #include "GBase.h"
 
+#ifdef HAVE_SDL2_NET
+#define MAX_MAIN_SEL 8
+#else
 #define MAX_MAIN_SEL 7
+#endif
 
 class MMain : public GBase  
 {

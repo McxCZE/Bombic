@@ -27,6 +27,20 @@ pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
 pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
 pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
+pkg_check_modules(SDL2_NET SDL2_net)
+
+# Check if SDL2_net was found
+if(SDL2_NET_FOUND)
+    set(HAVE_SDL2_NET ON)
+    message(STATUS "SDL2_net found - LAN multiplayer enabled")
+else()
+    set(HAVE_SDL2_NET OFF)
+    message(STATUS "SDL2_net NOT found - LAN multiplayer disabled")
+    message(STATUS "  To enable LAN multiplayer, install SDL2_net:")
+    message(STATUS "    Arch/Manjaro: sudo pacman -S sdl2_net")
+    message(STATUS "    Debian/Ubuntu: sudo apt install libsdl2-net-dev")
+    message(STATUS "    Fedora: sudo dnf install SDL2_net-devel")
+endif()
 
 # Generate config.h
 configure_file(

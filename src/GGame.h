@@ -15,6 +15,10 @@
 #include "GMrcha.h"
 #include "GView.h"
 
+// Network mode flags
+#define GAME_MODE_LOCAL     0
+#define GAME_MODE_LAN       1
+
 
 class GGame : public GBase
 {
@@ -24,7 +28,9 @@ public:
 	bool EndGame();  // zda uz je konec hry (vybiti bombicu) / vybiti mrch
 
 	bool m_deadmatch;
+	int m_networkMode;   // GAME_MODE_LOCAL or GAME_MODE_LAN
 	void LoadMap(const std::string file, int players, bool deadmatch, bool monsters, int bonuslevel);
+	void SetNetworkMode(int mode) { m_networkMode = mode; }
 	virtual int OnKey(int nChar);
 	virtual void Destroy();
 	virtual void Move();

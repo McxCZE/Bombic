@@ -30,6 +30,20 @@
 #define _LNG_DEADMATCH_BONUSLEVEL_   lng.Translate(24)
 #define _LNG_DEADMATCH_BACK_         lng.Translate(25)
 
+#define _LNG_MAIN_LAN_               lng.Translate(8)
+
+#define _LNG_LAN_HOST_               lng.Translate(80)
+#define _LNG_LAN_JOIN_               lng.Translate(81)
+#define _LNG_LAN_BACK_               lng.Translate(82)
+#define _LNG_LAN_WAITING_            lng.Translate(83)
+#define _LNG_LAN_CONNECTED_          lng.Translate(84)
+#define _LNG_LAN_START_              lng.Translate(85)
+#define _LNG_LAN_IP_                 lng.Translate(86)
+#define _LNG_LAN_CONNECTING_         lng.Translate(87)
+#define _LNG_LAN_MAP_                lng.Translate(88)
+#define _LNG_LAN_READY_              lng.Translate(89)
+#define _LNG_LAN_NOT_READY_          lng.Translate(90)
+
 #define _LNG_PAUSED_                 lng.Translate(40)
 
 #define MAX_TEXTS 500

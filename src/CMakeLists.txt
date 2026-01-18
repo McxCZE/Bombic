@@ -63,6 +63,18 @@ set(BOMBIC_SOURCES
     searchfile.cpp
 )
 
+# Add network sources only if SDL2_net is available
+if(HAVE_SDL2_NET)
+    list(APPEND BOMBIC_SOURCES
+        Network.cpp
+        MLAN.cpp
+        MLANHost.cpp
+        MLANJoin.cpp
+        MLANLobby.cpp
+        MLANPlaying.cpp
+    )
+endif()
+
 # Create executable
 add_executable(bombic ${BOMBIC_SOURCES})
 
@@ -76,6 +88,10 @@ target_include_directories(bombic PRIVATE
     ${SDL2_MIXER_INCLUDE_DIRS}
 )
 
+if(HAVE_SDL2_NET)
+    target_include_directories(bombic PRIVATE ${SDL2_NET_INCLUDE_DIRS})
+endif()
+
 # Link libraries
 target_link_libraries(bombic PRIVATE
     ${SDL2_LIBRARIES}
@@ -84,10 +100,18 @@ target_link_libraries(bombic PRIVATE
     ${SDL2_MIXER_LIBRARIES}
 )
 
+if(HAVE_SDL2_NET)
+    target_link_libraries(bombic PRIVATE ${SDL2_NET_LIBRARIES})
+endif()
+
 # Compile definitions
 target_compile_definitions(bombic PRIVATE
     HAVE_CONFIG_H
 )
+
+if(HAVE_SDL2_NET)
+    target_compile_definitions(bombic PRIVATE HAVE_SDL2_NET)
+endif()
 
 # Install executable
 install(TARGETS bombic

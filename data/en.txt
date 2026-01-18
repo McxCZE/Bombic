@@ -7,6 +7,7 @@
 5 Settings;
 6 Help;
 7 Credits;
+8 LAN;
 
 10 Kill 'em all!;
 11 Number of players;
@@ -51,6 +52,18 @@
 77 Game speed;
 78 Pause;
 79 NumLock;
+
+80 Host Game;
+81 Join Game;
+82 Back;
+83 Waiting for player...;
+84 Player connected!;
+85 Start Game;
+86 IP Address;
+87 Connecting...;
+88 Map;
+89 Ready;
+90 Not Ready;
 
 100 Bombic;
 101 Grey ball;

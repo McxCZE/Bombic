@@ -6,6 +6,9 @@
 #include "D3DXApp.h"
 #include "MMenu.h"
 #include "MainFrm.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 #define D_SIZE    (float)0.01
@@ -53,6 +56,10 @@ void MMenu::Move()
 	else if (m_size < D_MINSIZE) m_dsize = -m_dsize;
 
 	m_actual->Move();
+
+	// Check for auto-transitions (e.g., LAN connection established)
+	// Call OnKey with 0 to check for pending transitions
+	OnKey(0);
 }
 
 int MMenu::OnKey(int nChar)
@@ -108,10 +115,53 @@ int MMenu::OnKey(int nChar)
 		case MENU_CREDITS    :
 			m_actual->Destroy();
 			m_Mcredits.Init(m_pParent);
-			m_actual = &m_Mcredits; 
+			m_actual = &m_Mcredits;
 			break;
-		case MENU_DEFAULT      : 
-			return MENU_DEFAULT;  
+#ifdef HAVE_SDL2_NET
+		case MENU_LAN        :
+			m_actual->Destroy();
+			m_Mlan.Init(m_pParent);
+			m_actual = &m_Mlan;
+			break;
+		case MENU_LAN_HOST   :
+			m_actual->Destroy();
+			m_MlanHost.Init(m_pParent);
+			m_actual = &m_MlanHost;
+			break;
+		case MENU_LAN_JOIN   :
+			m_actual->Destroy();
+			m_MlanJoin.Init(m_pParent);
+			m_actual = &m_MlanJoin;
+			break;
+		case MENU_LAN_LOBBY  :
+			m_actual->Destroy();
+			m_MlanLobby.Init(m_pParent);
+			m_actual = &m_MlanLobby;
+			break;
+		case MENU_LAN_PLAYING:
+			m_actual->Destroy();
+			m_MlanPlaying.Init(m_pParent);
+			m_actual = &m_MlanPlaying;
+			if (g_network.IsHost()) {
+				// Host uses lobby settings
+				m_MlanPlaying.StartGame(
+					m_MlanLobby.m_filelist[m_MlanLobby.m_mapID].file,
+					m_MlanLobby.m_monsters,
+					m_MlanLobby.m_bonuslevel,
+					m_MlanLobby.m_victories);
+			} else {
+				// Client uses settings from network packet
+				const NetGameStartPacket& info = g_network.GetGameStartInfo();
+				m_MlanPlaying.StartGame(
+					info.mapFile,
+					info.monsters != 0,
+					info.bonuslevel,
+					info.victories);
+			}
+			break;
+#endif
+		case MENU_DEFAULT      :
+			return MENU_DEFAULT;
 			break;
 	}
 
@@ -151,4 +201,11 @@ void MMenu::Destroy()
 	m_Msetting.Destroy();
 	m_Mhelp.Destroy();
 	m_Mcredits.Destroy();
+#ifdef HAVE_SDL2_NET
+	m_Mlan.Destroy();
+	m_MlanHost.Destroy();
+	m_MlanJoin.Destroy();
+	m_MlanLobby.Destroy();
+	m_MlanPlaying.Destroy();
+#endif
 }
