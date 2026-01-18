@@ -13,7 +13,7 @@ class GObject
 public:
 	bool Hit();
 	bool WalkIn();
-	void Draw(int x, int y, bool walk, int bx, int by);
+	virtual void Draw(int x, int y, bool dead, int bx, int by);
 	GObject();
 	virtual ~GObject();
 	virtual void Move() {}

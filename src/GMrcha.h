@@ -22,9 +22,9 @@ public:
 	void Kill();
 	void Automove();
 	int Hit(); // zraci, ktereho bomba ji zasahla; -1 bez zasahu
-	virtual void Move();
+	void Move() override;
 	virtual void Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int mrchaID);
-	virtual void Draw(int x, int y, bool dead, int bx, int by);
+	void Draw(int x, int y, bool dead, int bx, int by) override;
 	GMrcha();
 	virtual ~GMrcha();
 

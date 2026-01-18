@@ -23,7 +23,7 @@ GObject::~GObject()
 
 }
 
-void GObject::Draw(int /*x*/, int /*y*/, bool /*walk*/, int /*bx*/, int /*by*/)
+void GObject::Draw(int /*x*/, int /*y*/, bool /*dead*/, int /*bx*/, int /*by*/)
 {
 }
 

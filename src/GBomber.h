@@ -21,8 +21,8 @@ public:
 	void GetBonus();
 	int  Hit();
 	void Input(bool left, bool right, bool up, bool down, bool action);
-	void Move();
-	void Draw(int x, int y, bool dead, int bx, int by);
+	void Move() override;
+	void Draw(int x, int y, bool dead, int bx, int by) override;
 	virtual void Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int ID);
 	GBomber();
 	virtual ~GBomber();

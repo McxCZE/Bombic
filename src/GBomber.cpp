@@ -60,7 +60,7 @@ void GBomber::Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int ID)
 void GBomber::Draw(int x, int y, bool dead, int bx, int by)
 {
 	if (m_mx != x || m_my != y) return;
-	
+
 	if ((m_dead && dead) || (m_dead && m_anim < P_bomber.anims)) {
 		d3dx.Draw(m_bBmp_s, bx - 25 + m_x, by+P_bomber.dy+m_y, 0, 1, 1, 128, m_anim/P_bomber.animspeed, 4);
 		d3dx.Draw(m_bBmp, bx - 25 + m_x, by+P_bomber.dy+m_y, 0, 1, 1, 255, m_anim/P_bomber.animspeed, 4);
