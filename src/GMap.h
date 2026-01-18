@@ -36,11 +36,11 @@ public:
 	bool IsFlyFreeNoBombs(int x, int y) const;
 	bool IsFlyFree(int x, int y) const;
 	void BombNapalmExpolode(GBomba *bomb);
-	int AddNapalmBomb(int bomberID, int x, int y, int dosah);
+	int AddNapalmBomb(int bomberID, int x, int y, int dosah, bool fromNetwork = false);
 	void AddNemoc(int mx, int my);
 	void AddBonusByType(int mx, int my, int bonusType);  // For network sync
 	void SetBombDanger(int x, int y, int d);
-	int AddMegaBomb(int bomberID, int x, int y, int dosah);
+	int AddMegaBomb(int bomberID, int x, int y, int dosah, bool fromNetwork = false);
 	void BombMegaExpolode(GBomba *bomb);
 	bool FireMap(int x, int y, int bmp, int b, int explotime = EXPLOTIME);
 	void AddBonus(int mx, int my);
