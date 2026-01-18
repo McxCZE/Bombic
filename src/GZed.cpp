@@ -6,6 +6,9 @@
 #include "D3DXApp.h"
 #include "GZed.h"
 #include "GGame.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -50,7 +53,18 @@ bool GZed::Hit()
 	if (m_destroiig) return (m_params.walk || m_params.firein);
 	m_anim = 0;
 	m_destroiig = true;
-	if (rand()%9 > 6-m_game->m_bombers || m_game->m_deadmatch) m_game->m_map.AddBonus(m_mx, m_my); // pridani bonusu po rozbite zdi
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only host decides bonus spawning to avoid rand() desync
+	if (m_game->m_networkMode == GAME_MODE_LAN) {
+		if (g_network.IsHost()) {
+			if (rand()%9 > 6-m_game->m_bombers || m_game->m_deadmatch) m_game->m_map.AddBonus(m_mx, m_my);
+		}
+		// Client doesn't call rand() here - receives bonus via network
+	} else
+#endif
+	{
+		if (rand()%9 > 6-m_game->m_bombers || m_game->m_deadmatch) m_game->m_map.AddBonus(m_mx, m_my); // pridani bonusu po rozbite zdi
+	}
 	return false;
 }
 

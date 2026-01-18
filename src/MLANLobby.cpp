@@ -212,6 +212,9 @@ int MLANLobby::OnKey(int nChar)
 
 	// Client: check if game started
 	if (g_network.IsClient() && g_network.HasGameStarted()) {
+		// Apply host's gspeed setting for synchronized gameplay
+		const NetGameStartPacket& info = g_network.GetGameStartInfo();
+		gspeed = info.gspeed_x10 / 10.0f;
 		g_network.ClearGameStarted();
 		return MENU_LAN_PLAYING;
 	}
@@ -249,7 +252,7 @@ int MLANLobby::OnKey(int nChar)
 			switch (m_sel) {
 			case 0:  // Start game
 				if (m_files > 0 && g_network.IsRemoteReady()) {
-					g_network.SendGameStart(m_filelist[m_mapID].file.c_str(), m_mapID, m_monsters, m_bonuslevel, m_victories);
+					g_network.SendGameStart(m_filelist[m_mapID].file.c_str(), m_mapID, m_monsters, m_bonuslevel, m_victories, gspeed);
 					return MENU_LAN_PLAYING;
 				}
 				break;

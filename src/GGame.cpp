@@ -171,9 +171,21 @@ void GGame::Move()
 		m_bomber[i].Move();
 	}
 
-	for (i = 0; i < m_mrch; i++) {
-		m_mrcha[i].Automove();
-		m_mrcha[i].Move();
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, client skips monster AI to avoid rand() desync
+	// Host sends monster positions every 5 frames
+	if (m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+		// Client: only run movement (positions will be corrected from host)
+		for (i = 0; i < m_mrch; i++) {
+			m_mrcha[i].Move();
+		}
+	} else
+#endif
+	{
+		for (i = 0; i < m_mrch; i++) {
+			m_mrcha[i].Automove();
+			m_mrcha[i].Move();
+		}
 	}
 
 	m_map.Move();

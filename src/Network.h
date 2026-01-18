@@ -130,6 +130,7 @@ struct NetGameStartPacket {
     uint8_t monsters;
     uint8_t bonuslevel;
     uint8_t victories;
+    uint8_t gspeed_x10;     // Game speed * 10 (10-40 for 1.0-4.0)
     char mapFile[64];
 };
 
@@ -236,7 +237,7 @@ public:
     void SendInput(bool left, bool right, bool up, bool down, bool action);
 
     // Send game start (host only)
-    void SendGameStart(const char* mapFile, int mapID, bool monsters, int bonuslevel, int victories);
+    void SendGameStart(const char* mapFile, int mapID, bool monsters, int bonuslevel, int victories, float gspeed);
 
     // Send map info update (host only, for lobby)
     void SendMapInfo(const char* mapFile, int mapID, bool monsters, int bonuslevel, int victories);

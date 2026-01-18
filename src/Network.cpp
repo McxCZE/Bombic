@@ -460,7 +460,7 @@ void Network::SendInput(bool left, bool right, bool up, bool down, bool action)
     SendPacket(&packet, sizeof(packet));
 }
 
-void Network::SendGameStart(const char* mapFile, int mapID, bool monsters, int bonuslevel, int victories)
+void Network::SendGameStart(const char* mapFile, int mapID, bool monsters, int bonuslevel, int victories, float gspeed)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
 
@@ -470,6 +470,7 @@ void Network::SendGameStart(const char* mapFile, int mapID, bool monsters, int b
     packet.monsters = monsters ? 1 : 0;
     packet.bonuslevel = (uint8_t)bonuslevel;
     packet.victories = (uint8_t)victories;
+    packet.gspeed_x10 = (uint8_t)(gspeed * 10.0f);  // Store as 10-40 for 1.0-4.0
     strncpy(packet.mapFile, mapFile, sizeof(packet.mapFile) - 1);
     packet.mapFile[sizeof(packet.mapFile) - 1] = '\0';
 
