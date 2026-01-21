@@ -126,12 +126,23 @@ void GGame::Move()
 	if (m_networkMode == GAME_MODE_LAN) {
 		g_network.Update();
 
-		// Client: check if host ended the round
-		if (g_network.IsClient() && g_network.HasRoundEnded()) {
-			// Host ended the game - end client's game too
-			m_gameended = true;
-			m_pParent->StartMenu();
-			return;  // Don't process any more this frame
+		// Client: check if host ended the round (deathmatch) or level (co-op)
+		if (g_network.IsClient()) {
+			// Deathmatch: check HasRoundEnded
+			if (g_network.HasRoundEnded()) {
+				// Host ended the game - end client's game too
+				m_gameended = true;
+				m_pParent->StartMenu();
+				return;  // Don't process any more this frame
+			}
+			// Co-op: check HasCoopLevelEnd
+			if (g_network.HasCoopLevelEnd()) {
+				// Host ended the level - end client's game too
+				// Note: Don't clear the signal here - MLANCoopPlaying::Move() will read it
+				m_gameended = true;
+				m_pParent->StartMenu();
+				return;  // Don't process any more this frame
+			}
 		}
 	}
 #endif
