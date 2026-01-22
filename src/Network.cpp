@@ -3,8 +3,20 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "Network.h"
+#include "MLAN.h"  // For g_coopMode
 #include <cstring>
 #include <cstdio>
+#include <cstdarg>
+
+// Simple logging for network issues - can be expanded to file logging if needed
+static void NetLog(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    fprintf(stderr, "[Network] ");
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+}
 
 // Global network instance
 Network g_network;
@@ -34,6 +46,12 @@ Network::Network()
     , m_bonusSpawnedCount(0)
     , m_bonusSpawnedHead(0)
     , m_bonusSpawnedTail(0)
+    , m_bonusPickedCount(0)
+    , m_bonusPickedHead(0)
+    , m_bonusPickedTail(0)
+    , m_bonusDestroyedCount(0)
+    , m_bonusDestroyedHead(0)
+    , m_bonusDestroyedTail(0)
     , m_bombKickedCount(0)
     , m_bombKickedHead(0)
     , m_bombKickedTail(0)
@@ -46,7 +64,17 @@ Network::Network()
     , m_illnessTransferCount(0)
     , m_illnessTransferHead(0)
     , m_illnessTransferTail(0)
+    , m_playerHitCount(0)
+    , m_playerHitHead(0)
+    , m_playerHitTail(0)
     , m_localFrame(0)
+    , m_lastPingSent(0)
+    , m_lastPongReceived(0)
+    , m_coopLevelInfoUpdated(false)
+    , m_coopLevelStartSignal(false)
+    , m_coopLevelEndSignal(false)
+    , m_coopMenuStateUpdated(false)
+    , m_coopLevelTransitionUpdated(false)
 {
     memset(&m_remoteAddr, 0, sizeof(m_remoteAddr));
     memset(&m_gameStartInfo, 0, sizeof(m_gameStartInfo));
@@ -55,10 +83,18 @@ Network::Network()
     memset(&m_gameState, 0, sizeof(m_gameState));
     memset(m_bombPlacedQueue, 0, sizeof(m_bombPlacedQueue));
     memset(m_bonusSpawnedQueue, 0, sizeof(m_bonusSpawnedQueue));
+    memset(m_bonusPickedQueue, 0, sizeof(m_bonusPickedQueue));
+    memset(m_bonusDestroyedQueue, 0, sizeof(m_bonusDestroyedQueue));
     memset(m_bombKickedQueue, 0, sizeof(m_bombKickedQueue));
     memset(m_bombDetonateQueue, 0, sizeof(m_bombDetonateQueue));
     memset(m_mrchaStateQueue, 0, sizeof(m_mrchaStateQueue));
     memset(m_illnessTransferQueue, 0, sizeof(m_illnessTransferQueue));
+    memset(m_playerHitQueue, 0, sizeof(m_playerHitQueue));
+    memset(&m_coopLevelInfo, 0, sizeof(m_coopLevelInfo));
+    memset(&m_coopLevelStartInfo, 0, sizeof(m_coopLevelStartInfo));
+    memset(&m_coopLevelEndInfo, 0, sizeof(m_coopLevelEndInfo));
+    memset(&m_coopMenuState, 0, sizeof(m_coopMenuState));
+    memset(&m_coopLevelTransition, 0, sizeof(m_coopLevelTransition));
 }
 
 Network::~Network()
@@ -208,10 +244,11 @@ void Network::Update()
         HandlePacket(m_packetIn);
     }
 
+    Uint32 now = SDL_GetTicks();
+
     // If client is connecting, resend connection request periodically
     if (m_state == NET_STATE_CONNECTING) {
         static Uint32 lastConnectTime = 0;
-        Uint32 now = SDL_GetTicks();
         if (now - lastConnectTime > 1000) {  // Resend every second
             lastConnectTime = now;
             NetConnectPacket packet;
@@ -220,6 +257,26 @@ void Network::Update()
             strncpy(packet.playerName, "Player", sizeof(packet.playerName) - 1);
             packet.playerName[sizeof(packet.playerName) - 1] = '\0';
             SendPacket(&packet, sizeof(packet));
+        }
+    }
+
+    // Heartbeat mechanism for IN_GAME and CONNECTED states
+    // Keeps connection alive and detects disconnection
+    if (m_state >= NET_STATE_CONNECTED && m_hasRemoteAddr) {
+        // Send periodic pings
+        if (now - m_lastPingSent > HEARTBEAT_INTERVAL_MS) {
+            uint8_t ping = NET_PACKET_PING;
+            SendPacket(&ping, 1);
+            m_lastPingSent = now;
+        }
+
+        // Check for timeout (disconnection)
+        if (m_lastPongReceived > 0 && now - m_lastPongReceived > HEARTBEAT_TIMEOUT_MS) {
+            NetLog("Heartbeat timeout - remote player may have disconnected");
+            m_lastError = "Connection timeout - remote player disconnected";
+            m_state = NET_STATE_DISCONNECTED;
+            m_hasRemoteAddr = false;
+            m_remoteInputAvailable = false;
         }
     }
 }
@@ -243,10 +300,14 @@ void Network::HandlePacket(UDPpacket* packet)
                     NetAcceptPacket acceptPkt;
                     acceptPkt.type = NET_PACKET_ACCEPT;
                     acceptPkt.assignedPlayerID = 1;  // Client is player 1
+                    acceptPkt.gameMode = g_coopMode ? 1 : 0;  // Send game mode to client
                     SendPacket(&acceptPkt, sizeof(acceptPkt));
 
                     m_state = NET_STATE_CONNECTED;
                     m_remoteReady = false;
+                    // Initialize heartbeat tracking
+                    m_lastPingSent = SDL_GetTicks();
+                    m_lastPongReceived = SDL_GetTicks();
                 } else {
                     // Reject - wrong protocol version
                     uint8_t rejectPkt = NET_PACKET_REJECT;
@@ -264,8 +325,12 @@ void Network::HandlePacket(UDPpacket* packet)
             if (packet->len >= (int)sizeof(NetAcceptPacket)) {
                 NetAcceptPacket* acceptPkt = (NetAcceptPacket*)packet->data;
                 m_localPlayerID = acceptPkt->assignedPlayerID;
+                g_coopMode = (acceptPkt->gameMode == 1);  // Set game mode from host
                 m_state = NET_STATE_CONNECTED;
                 m_remoteReady = false;
+                // Initialize heartbeat tracking
+                m_lastPingSent = SDL_GetTicks();
+                m_lastPongReceived = SDL_GetTicks();
             }
         }
         break;
@@ -342,7 +407,8 @@ void Network::HandlePacket(UDPpacket* packet)
         break;
 
     case NET_PACKET_PONG:
-        // Could track latency here
+        // Track last pong time for heartbeat timeout detection
+        m_lastPongReceived = SDL_GetTicks();
         break;
 
     case NET_PACKET_ROUND_END:
@@ -371,60 +437,173 @@ void Network::HandlePacket(UDPpacket* packet)
 
     case NET_PACKET_BOMB_PLACED:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetBombPlacedPacket) && m_bombPlacedCount < MAX_BOMB_QUEUE) {
-                memcpy(&m_bombPlacedQueue[m_bombPlacedTail], packet->data, sizeof(NetBombPlacedPacket));
-                m_bombPlacedTail = (m_bombPlacedTail + 1) % MAX_BOMB_QUEUE;
-                m_bombPlacedCount++;
+            if (packet->len >= (int)sizeof(NetBombPlacedPacket)) {
+                if (m_bombPlacedCount < MAX_BOMB_QUEUE) {
+                    memcpy(&m_bombPlacedQueue[m_bombPlacedTail], packet->data, sizeof(NetBombPlacedPacket));
+                    m_bombPlacedTail = (m_bombPlacedTail + 1) % MAX_BOMB_QUEUE;
+                    m_bombPlacedCount++;
+                } else {
+                    NetLog("WARNING: Bomb placed queue full, dropping packet");
+                }
             }
         }
         break;
 
     case NET_PACKET_BONUS_SPAWNED:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetBonusSpawnedPacket) && m_bonusSpawnedCount < MAX_BONUS_QUEUE) {
-                memcpy(&m_bonusSpawnedQueue[m_bonusSpawnedTail], packet->data, sizeof(NetBonusSpawnedPacket));
-                m_bonusSpawnedTail = (m_bonusSpawnedTail + 1) % MAX_BONUS_QUEUE;
-                m_bonusSpawnedCount++;
+            if (packet->len >= (int)sizeof(NetBonusSpawnedPacket)) {
+                if (m_bonusSpawnedCount < MAX_BONUS_QUEUE) {
+                    memcpy(&m_bonusSpawnedQueue[m_bonusSpawnedTail], packet->data, sizeof(NetBonusSpawnedPacket));
+                    m_bonusSpawnedTail = (m_bonusSpawnedTail + 1) % MAX_BONUS_QUEUE;
+                    m_bonusSpawnedCount++;
+                } else {
+                    NetLog("WARNING: Bonus spawned queue full, dropping packet");
+                }
+            }
+        }
+        break;
+
+    case NET_PACKET_BONUS_PICKED:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBonusPickedPacket)) {
+                if (m_bonusPickedCount < MAX_BONUS_PICKED_QUEUE) {
+                    memcpy(&m_bonusPickedQueue[m_bonusPickedTail], packet->data, sizeof(NetBonusPickedPacket));
+                    m_bonusPickedTail = (m_bonusPickedTail + 1) % MAX_BONUS_PICKED_QUEUE;
+                    m_bonusPickedCount++;
+                } else {
+                    NetLog("WARNING: Bonus picked queue full, dropping packet");
+                }
+            }
+        }
+        break;
+
+    case NET_PACKET_BONUS_DESTROYED:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetBonusDestroyedPacket)) {
+                if (m_bonusDestroyedCount < MAX_BONUS_DESTROYED_QUEUE) {
+                    memcpy(&m_bonusDestroyedQueue[m_bonusDestroyedTail], packet->data, sizeof(NetBonusDestroyedPacket));
+                    m_bonusDestroyedTail = (m_bonusDestroyedTail + 1) % MAX_BONUS_DESTROYED_QUEUE;
+                    m_bonusDestroyedCount++;
+                } else {
+                    NetLog("WARNING: Bonus destroyed queue full, dropping packet");
+                }
             }
         }
         break;
 
     case NET_PACKET_BOMB_KICKED:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetBombKickedPacket) && m_bombKickedCount < MAX_KICK_QUEUE) {
-                memcpy(&m_bombKickedQueue[m_bombKickedTail], packet->data, sizeof(NetBombKickedPacket));
-                m_bombKickedTail = (m_bombKickedTail + 1) % MAX_KICK_QUEUE;
-                m_bombKickedCount++;
+            if (packet->len >= (int)sizeof(NetBombKickedPacket)) {
+                if (m_bombKickedCount < MAX_KICK_QUEUE) {
+                    memcpy(&m_bombKickedQueue[m_bombKickedTail], packet->data, sizeof(NetBombKickedPacket));
+                    m_bombKickedTail = (m_bombKickedTail + 1) % MAX_KICK_QUEUE;
+                    m_bombKickedCount++;
+                } else {
+                    NetLog("WARNING: Bomb kicked queue full, dropping packet");
+                }
             }
         }
         break;
 
     case NET_PACKET_BOMB_DETONATE:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetBombDetonatePacket) && m_bombDetonateCount < MAX_DETONATE_QUEUE) {
-                memcpy(&m_bombDetonateQueue[m_bombDetonateTail], packet->data, sizeof(NetBombDetonatePacket));
-                m_bombDetonateTail = (m_bombDetonateTail + 1) % MAX_DETONATE_QUEUE;
-                m_bombDetonateCount++;
+            if (packet->len >= (int)sizeof(NetBombDetonatePacket)) {
+                if (m_bombDetonateCount < MAX_DETONATE_QUEUE) {
+                    memcpy(&m_bombDetonateQueue[m_bombDetonateTail], packet->data, sizeof(NetBombDetonatePacket));
+                    m_bombDetonateTail = (m_bombDetonateTail + 1) % MAX_DETONATE_QUEUE;
+                    m_bombDetonateCount++;
+                } else {
+                    NetLog("WARNING: Bomb detonate queue full, dropping packet");
+                }
             }
         }
         break;
 
     case NET_PACKET_MRCHA_STATE:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetMrchaStatePacket) && m_mrchaStateCount < MAX_MRCHA_QUEUE) {
-                memcpy(&m_mrchaStateQueue[m_mrchaStateTail], packet->data, sizeof(NetMrchaStatePacket));
-                m_mrchaStateTail = (m_mrchaStateTail + 1) % MAX_MRCHA_QUEUE;
-                m_mrchaStateCount++;
+            if (packet->len >= (int)sizeof(NetMrchaStatePacket)) {
+                if (m_mrchaStateCount < MAX_MRCHA_QUEUE) {
+                    memcpy(&m_mrchaStateQueue[m_mrchaStateTail], packet->data, sizeof(NetMrchaStatePacket));
+                    m_mrchaStateTail = (m_mrchaStateTail + 1) % MAX_MRCHA_QUEUE;
+                    m_mrchaStateCount++;
+                } else {
+                    NetLog("WARNING: Mrcha state queue full, dropping packet");
+                }
             }
         }
         break;
 
     case NET_PACKET_ILLNESS_TRANSFER:
         if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
-            if (packet->len >= (int)sizeof(NetIllnessTransferPacket) && m_illnessTransferCount < MAX_ILLNESS_QUEUE) {
-                memcpy(&m_illnessTransferQueue[m_illnessTransferTail], packet->data, sizeof(NetIllnessTransferPacket));
-                m_illnessTransferTail = (m_illnessTransferTail + 1) % MAX_ILLNESS_QUEUE;
-                m_illnessTransferCount++;
+            if (packet->len >= (int)sizeof(NetIllnessTransferPacket)) {
+                if (m_illnessTransferCount < MAX_ILLNESS_QUEUE) {
+                    memcpy(&m_illnessTransferQueue[m_illnessTransferTail], packet->data, sizeof(NetIllnessTransferPacket));
+                    m_illnessTransferTail = (m_illnessTransferTail + 1) % MAX_ILLNESS_QUEUE;
+                    m_illnessTransferCount++;
+                } else {
+                    NetLog("WARNING: Illness transfer queue full, dropping packet");
+                }
+            }
+        }
+        break;
+
+    case NET_PACKET_PLAYER_HIT:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetPlayerHitPacket)) {
+                if (m_playerHitCount < MAX_PLAYER_HIT_QUEUE) {
+                    memcpy(&m_playerHitQueue[m_playerHitTail], packet->data, sizeof(NetPlayerHitPacket));
+                    m_playerHitTail = (m_playerHitTail + 1) % MAX_PLAYER_HIT_QUEUE;
+                    m_playerHitCount++;
+                } else {
+                    NetLog("WARNING: Player hit queue full, dropping packet");
+                }
+            }
+        }
+        break;
+
+    // Co-op story mode packets
+    case NET_PACKET_COOP_LEVEL_INFO:
+        if (m_role == NET_ROLE_CLIENT && m_state >= NET_STATE_CONNECTED) {
+            if (packet->len >= (int)sizeof(NetCoopLevelInfoPacket)) {
+                memcpy(&m_coopLevelInfo, packet->data, sizeof(NetCoopLevelInfoPacket));
+                m_coopLevelInfoUpdated = true;
+            }
+        }
+        break;
+
+    case NET_PACKET_COOP_LEVEL_START:
+        if (m_role == NET_ROLE_CLIENT && m_state >= NET_STATE_CONNECTED) {
+            if (packet->len >= (int)sizeof(NetCoopLevelStartPacket)) {
+                memcpy(&m_coopLevelStartInfo, packet->data, sizeof(NetCoopLevelStartPacket));
+                m_coopLevelStartSignal = true;
+                m_state = NET_STATE_IN_GAME;
+            }
+        }
+        break;
+
+    case NET_PACKET_COOP_LEVEL_END:
+        if (m_role == NET_ROLE_CLIENT && m_state == NET_STATE_IN_GAME) {
+            if (packet->len >= (int)sizeof(NetCoopLevelEndPacket)) {
+                memcpy(&m_coopLevelEndInfo, packet->data, sizeof(NetCoopLevelEndPacket));
+                m_coopLevelEndSignal = true;
+            }
+        }
+        break;
+
+    case NET_PACKET_COOP_MENU_STATE:
+        if (m_role == NET_ROLE_CLIENT && m_state >= NET_STATE_CONNECTED) {
+            if (packet->len >= (int)sizeof(NetCoopMenuStatePacket)) {
+                memcpy(&m_coopMenuState, packet->data, sizeof(NetCoopMenuStatePacket));
+                m_coopMenuStateUpdated = true;
+            }
+        }
+        break;
+
+    case NET_PACKET_COOP_LEVEL_TRANSITION:
+        if (m_role == NET_ROLE_CLIENT && m_state >= NET_STATE_CONNECTED) {
+            if (packet->len >= (int)sizeof(NetCoopLevelTransitionPacket)) {
+                memcpy(&m_coopLevelTransition, packet->data, sizeof(NetCoopLevelTransitionPacket));
+                m_coopLevelTransitionUpdated = true;
             }
         }
         break;
@@ -547,7 +726,10 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
                             int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
                             int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
                             int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
-                            int p0_lives, int p1_lives, int p0_abilities, int p1_abilities)
+                            int p0_lives, int p1_lives, int p0_abilities, int p1_abilities,
+                            int p0_score, int p1_score,
+                            int p0_illness_type, int p0_illness_timer,
+                            int p1_illness_type, int p1_illness_timer)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
 
@@ -577,6 +759,12 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
     packet.p1_lives = (uint8_t)p1_lives;
     packet.p0_abilities = (uint8_t)p0_abilities;
     packet.p1_abilities = (uint8_t)p1_abilities;
+    packet.p0_score = (uint16_t)p0_score;
+    packet.p1_score = (uint16_t)p1_score;
+    packet.p0_illness_type = (int8_t)p0_illness_type;
+    packet.p1_illness_type = (int8_t)p1_illness_type;
+    packet.p0_illness_timer = (uint16_t)p0_illness_timer;
+    packet.p1_illness_timer = (uint16_t)p1_illness_timer;
 
     SendPacket(&packet, sizeof(packet));
 }
@@ -610,6 +798,31 @@ void Network::SendBonusSpawned(int x, int y, int bonusType)
     SendPacket(&packet, sizeof(packet));
 }
 
+void Network::SendBonusPicked(int x, int y, int pickerID)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBonusPickedPacket packet;
+    packet.type = NET_PACKET_BONUS_PICKED;
+    packet.x = (int8_t)x;
+    packet.y = (int8_t)y;
+    packet.pickerID = (uint8_t)pickerID;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendBonusDestroyed(int x, int y)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetBonusDestroyedPacket packet;
+    packet.type = NET_PACKET_BONUS_DESTROYED;
+    packet.x = (int8_t)x;
+    packet.y = (int8_t)y;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
 NetBombPlacedPacket Network::PopBombPlaced()
 {
     NetBombPlacedPacket result = {};
@@ -628,6 +841,28 @@ NetBonusSpawnedPacket Network::PopBonusSpawned()
         result = m_bonusSpawnedQueue[m_bonusSpawnedHead];
         m_bonusSpawnedHead = (m_bonusSpawnedHead + 1) % MAX_BONUS_QUEUE;
         m_bonusSpawnedCount--;
+    }
+    return result;
+}
+
+NetBonusPickedPacket Network::PopBonusPicked()
+{
+    NetBonusPickedPacket result = {};
+    if (m_bonusPickedCount > 0) {
+        result = m_bonusPickedQueue[m_bonusPickedHead];
+        m_bonusPickedHead = (m_bonusPickedHead + 1) % MAX_BONUS_PICKED_QUEUE;
+        m_bonusPickedCount--;
+    }
+    return result;
+}
+
+NetBonusDestroyedPacket Network::PopBonusDestroyed()
+{
+    NetBonusDestroyedPacket result = {};
+    if (m_bonusDestroyedCount > 0) {
+        result = m_bonusDestroyedQueue[m_bonusDestroyedHead];
+        m_bonusDestroyedHead = (m_bonusDestroyedHead + 1) % MAX_BONUS_DESTROYED_QUEUE;
+        m_bonusDestroyedCount--;
     }
     return result;
 }
@@ -678,7 +913,7 @@ NetBombDetonatePacket Network::PopBombDetonate()
     return result;
 }
 
-void Network::SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives)
+void Network::SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives, bool hitting)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
 
@@ -692,6 +927,7 @@ void Network::SendMrchaState(int mrchaID, int mx, int my, float x, float y, int 
     packet.dir = (uint8_t)dir;
     packet.dead = dead ? 1 : 0;
     packet.lives = (uint8_t)lives;
+    packet.hitting = hitting ? 1 : 0;
 
     SendPacket(&packet, sizeof(packet));
 }
@@ -729,4 +965,122 @@ NetIllnessTransferPacket Network::PopIllnessTransfer()
         m_illnessTransferCount--;
     }
     return result;
+}
+
+void Network::SendPlayerHit(int playerID, bool hitting, int lives, bool dead)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetPlayerHitPacket packet;
+    packet.type = NET_PACKET_PLAYER_HIT;
+    packet.playerID = (uint8_t)playerID;
+    packet.hitting = hitting ? 1 : 0;
+    packet.lives = (uint8_t)lives;
+    packet.dead = dead ? 1 : 0;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+NetPlayerHitPacket Network::PopPlayerHit()
+{
+    NetPlayerHitPacket result = {};
+    if (m_playerHitCount > 0) {
+        result = m_playerHitQueue[m_playerHitHead];
+        m_playerHitHead = (m_playerHitHead + 1) % MAX_PLAYER_HIT_QUEUE;
+        m_playerHitCount--;
+    }
+    return result;
+}
+
+// Co-op story mode methods
+
+void Network::SendCoopLevelInfo(int level, int bonuslevel, int needwon, int picturepre,
+                                 int picturepost, int picturedead, const char* file, const char* code)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
+
+    NetCoopLevelInfoPacket packet;
+    packet.type = NET_PACKET_COOP_LEVEL_INFO;
+    packet.level = (uint8_t)level;
+    packet.bonuslevel = (uint8_t)bonuslevel;
+    packet.needwon = (uint8_t)needwon;
+    packet.picturepre = (uint8_t)picturepre;
+    packet.picturepost = (uint8_t)picturepost;
+    packet.picturedead = (uint8_t)picturedead;
+    strncpy(packet.file, file, sizeof(packet.file) - 1);
+    packet.file[sizeof(packet.file) - 1] = '\0';
+    strncpy(packet.code, code, sizeof(packet.code) - 1);
+    packet.code[sizeof(packet.code) - 1] = '\0';
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendCoopLevelStart(float gspeed)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
+
+    NetCoopLevelStartPacket packet;
+    packet.type = NET_PACKET_COOP_LEVEL_START;
+    packet.gspeed_x10 = (uint8_t)(gspeed * 10.0f);
+
+    // Send multiple times to improve reliability over UDP
+    // This critical packet starts level gameplay - packet loss would cause desync
+    for (int i = 0; i < 3; i++) {
+        SendPacket(&packet, sizeof(packet));
+    }
+
+    m_state = NET_STATE_IN_GAME;
+}
+
+void Network::SendCoopLevelEnd(bool victory)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_IN_GAME) return;
+
+    NetCoopLevelEndPacket packet;
+    packet.type = NET_PACKET_COOP_LEVEL_END;
+    packet.victory = victory ? 1 : 0;
+
+    // Send multiple times to improve reliability over UDP
+    // This critical packet determines level end sync - packet loss would cause desync
+    for (int i = 0; i < 3; i++) {
+        SendPacket(&packet, sizeof(packet));
+    }
+}
+
+void Network::SendCoopMenuState(int menustate)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
+
+    NetCoopMenuStatePacket packet;
+    packet.type = NET_PACKET_COOP_MENU_STATE;
+    packet.menustate = (uint8_t)menustate;
+
+    SendPacket(&packet, sizeof(packet));
+}
+
+void Network::SendCoopLevelTransition(int level, int bonuslevel, int needwon, int picturepre,
+                                       int picturepost, int picturedead, const char* file,
+                                       const char* code, int menustate)
+{
+    if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
+
+    NetCoopLevelTransitionPacket packet;
+    packet.type = NET_PACKET_COOP_LEVEL_TRANSITION;
+    packet.level = (uint8_t)level;
+    packet.bonuslevel = (uint8_t)bonuslevel;
+    packet.needwon = (uint8_t)needwon;
+    packet.picturepre = (uint8_t)picturepre;
+    packet.picturepost = (uint8_t)picturepost;
+    packet.picturedead = (uint8_t)picturedead;
+    packet.menustate = (uint8_t)menustate;
+    strncpy(packet.file, file, sizeof(packet.file) - 1);
+    packet.file[sizeof(packet.file) - 1] = '\0';
+    strncpy(packet.code, code, sizeof(packet.code) - 1);
+    packet.code[sizeof(packet.code) - 1] = '\0';
+
+    // Send multiple times to improve reliability over UDP
+    // This critical packet handles level transitions - packet loss would cause desync
+    for (int i = 0; i < 3; i++) {
+        SendPacket(&packet, sizeof(packet));
+    }
 }

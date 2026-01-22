@@ -34,6 +34,17 @@ enum NetPacketType : uint8_t {
     NET_PACKET_BOMB_DETONATE = 17, // Timer bomb detonation (host -> client)
     NET_PACKET_MRCHA_STATE = 18, // Monster state sync (host -> client)
     NET_PACKET_ILLNESS_TRANSFER = 19, // Illness transfer between players (host -> client)
+    // Co-op story mode packets
+    NET_PACKET_COOP_LEVEL_INFO = 20,   // Host sends level info to client
+    NET_PACKET_COOP_LEVEL_START = 21,  // Host signals level gameplay start
+    NET_PACKET_COOP_LEVEL_END = 22,    // Host sends level result
+    NET_PACKET_COOP_MENU_STATE = 23,   // Host syncs screen state (intro/victory/defeat)
+    NET_PACKET_COOP_LEVEL_TRANSITION = 24, // Combined level info + menu state (atomic transition)
+    // Bonus synchronization packets (co-op)
+    NET_PACKET_BONUS_PICKED = 25,      // Bonus picked up (host -> client)
+    NET_PACKET_BONUS_DESTROYED = 26,   // Bonus destroyed by explosion (host -> client)
+    // Player hit event (for immediate m_hitting sync)
+    NET_PACKET_PLAYER_HIT = 27,        // Player hit event (host -> client)
 };
 
 // Bomb type enum for network sync
@@ -62,6 +73,21 @@ struct NetBonusSpawnedPacket {
     uint8_t bonusType;      // Bonus type ID (matches the switch case in AddBonus)
 };
 
+// Bonus picked up packet (host -> client) - synchronizes bonus pickup
+struct NetBonusPickedPacket {
+    uint8_t type;           // NET_PACKET_BONUS_PICKED
+    int8_t x;               // Map X position where bonus was
+    int8_t y;               // Map Y position where bonus was
+    uint8_t pickerID;       // Bomber ID who picked up the bonus
+};
+
+// Bonus destroyed packet (host -> client) - synchronizes bonus destruction by explosion
+struct NetBonusDestroyedPacket {
+    uint8_t type;           // NET_PACKET_BONUS_DESTROYED
+    int8_t x;               // Map X position
+    int8_t y;               // Map Y position
+};
+
 // Bomb kicked/pushed packet (host -> client)
 struct NetBombKickedPacket {
     uint8_t type;           // NET_PACKET_BOMB_KICKED
@@ -87,6 +113,7 @@ struct NetMrchaStatePacket {
     uint8_t dir;            // Direction (0-4)
     uint8_t dead;           // Is dead?
     uint8_t lives;          // Remaining lives
+    uint8_t hitting;        // Is in hitting state (temporary invulnerability)
 };
 
 // Illness transfer packet (host -> client)
@@ -95,6 +122,61 @@ struct NetIllnessTransferPacket {
     uint8_t fromPlayer;     // Player who has the illness
     uint8_t toPlayer;       // Player receiving the illness
     uint8_t illnessType;    // Type of illness bonus (100+ range)
+};
+
+// Player hit event packet (host -> client) - immediate m_hitting sync
+struct NetPlayerHitPacket {
+    uint8_t type;           // NET_PACKET_PLAYER_HIT
+    uint8_t playerID;       // Which player was hit (0 or 1)
+    uint8_t hitting;        // 1 = now in hitting state (invulnerable), 0 = no longer hitting
+    uint8_t lives;          // Current lives after hit
+    uint8_t dead;           // Is dead?
+};
+
+// Co-op level info packet (host -> client)
+struct NetCoopLevelInfoPacket {
+    uint8_t type;           // NET_PACKET_COOP_LEVEL_INFO
+    uint8_t level;          // Current level (0-39)
+    uint8_t bonuslevel;     // Bonus level setting
+    uint8_t needwon;        // Whether monsters must be killed
+    uint8_t picturepre;     // Intro picture ID
+    uint8_t picturepost;    // Victory picture ID
+    uint8_t picturedead;    // Defeat picture ID
+    char file[20];          // Map filename
+    char code[8];           // Level code
+};
+
+// Co-op level start packet (host -> client)
+struct NetCoopLevelStartPacket {
+    uint8_t type;           // NET_PACKET_COOP_LEVEL_START
+    uint8_t gspeed_x10;     // Game speed * 10
+};
+
+// Co-op level end packet (host -> client)
+struct NetCoopLevelEndPacket {
+    uint8_t type;           // NET_PACKET_COOP_LEVEL_END
+    uint8_t victory;        // 1 = victory, 0 = defeat
+};
+
+// Co-op menu state packet (host -> client)
+struct NetCoopMenuStatePacket {
+    uint8_t type;           // NET_PACKET_COOP_MENU_STATE
+    uint8_t menustate;      // 0=intro, 1=playing, 2=victory, 3=defeat
+};
+
+// Co-op level transition packet (host -> client) - combines level info + menu state
+// This ensures atomic level transitions without race conditions from separate UDP packets
+struct NetCoopLevelTransitionPacket {
+    uint8_t type;           // NET_PACKET_COOP_LEVEL_TRANSITION
+    uint8_t level;          // Current level (0-39)
+    uint8_t bonuslevel;     // Bonus level setting
+    uint8_t needwon;        // Whether monsters must be killed
+    uint8_t picturepre;     // Intro picture ID
+    uint8_t picturepost;    // Victory picture ID
+    uint8_t picturedead;    // Defeat picture ID
+    uint8_t menustate;      // 0=intro, 1=playing, 2=victory, 3=defeat
+    char file[20];          // Map filename
+    char code[8];           // Level code
 };
 
 // Input state packet (sent each frame)
@@ -121,6 +203,7 @@ struct NetConnectPacket {
 struct NetAcceptPacket {
     uint8_t type;           // NET_PACKET_ACCEPT
     uint8_t assignedPlayerID;
+    uint8_t gameMode;       // 0 = deathmatch, 1 = co-op
 };
 
 // Game start packet
@@ -192,8 +275,16 @@ struct NetGameStatePacket {
     uint8_t p1_napalmbombs; // Player 1 napalm bombs count
     uint8_t p0_lives;       // Player 0 lives
     uint8_t p1_lives;       // Player 1 lives
-    uint8_t p0_abilities;   // Player 0 abilities (bit flags: kopani, posilani, casovac)
-    uint8_t p1_abilities;   // Player 1 abilities (bit flags: kopani, posilani, casovac)
+    uint8_t p0_abilities;   // Player 0 abilities (bit flags: kopani, posilani, casovac, hitting)
+    uint8_t p1_abilities;   // Player 1 abilities (bit flags: kopani, posilani, casovac, hitting)
+    // Score sync
+    uint16_t p0_score;      // Player 0 score
+    uint16_t p1_score;      // Player 1 score
+    // Illness sync
+    int8_t p0_illness_type; // Player 0 illness type (-1 = none)
+    int8_t p1_illness_type; // Player 1 illness type (-1 = none)
+    uint16_t p0_illness_timer; // Player 0 illness remaining timer
+    uint16_t p1_illness_timer; // Player 1 illness remaining timer
 };
 
 // Network role
@@ -256,7 +347,10 @@ public:
                        int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
                        int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
                        int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
-                       int p0_lives, int p1_lives, int p0_abilities, int p1_abilities);
+                       int p0_lives, int p1_lives, int p0_abilities, int p1_abilities,
+                       int p0_score, int p1_score,
+                       int p0_illness_type, int p0_illness_timer,
+                       int p1_illness_type, int p1_illness_timer);
 
     // Get received input (returns true if new input available)
     bool GetRemoteInput(bool& left, bool& right, bool& up, bool& down, bool& action);
@@ -274,10 +368,13 @@ public:
     void SendBombDetonate(int bomberID);
 
     // Send monster state (host only)
-    void SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives);
+    void SendMrchaState(int mrchaID, int mx, int my, float x, float y, int dir, bool dead, int lives, bool hitting);
 
     // Send illness transfer (host only)
     void SendIllnessTransfer(int fromPlayer, int toPlayer, int illnessType);
+
+    // Send player hit event (host only) - immediate m_hitting sync
+    void SendPlayerHit(int playerID, bool hitting, int lives, bool dead);
 
     // Game state sync (for client)
     bool HasGameStateUpdate() const { return m_gameStateUpdated; }
@@ -291,6 +388,20 @@ public:
     // Bonus spawned notification (for client)
     bool HasBonusSpawned() const { return m_bonusSpawnedCount > 0; }
     NetBonusSpawnedPacket PopBonusSpawned();
+
+    // Send bonus picked (host only)
+    void SendBonusPicked(int x, int y, int pickerID);
+
+    // Send bonus destroyed (host only)
+    void SendBonusDestroyed(int x, int y);
+
+    // Bonus picked notification (for client)
+    bool HasBonusPicked() const { return m_bonusPickedCount > 0; }
+    NetBonusPickedPacket PopBonusPicked();
+
+    // Bonus destroyed notification (for client)
+    bool HasBonusDestroyed() const { return m_bonusDestroyedCount > 0; }
+    NetBonusDestroyedPacket PopBonusDestroyed();
 
     // Bomb kicked notification (for client)
     bool HasBombKicked() const { return m_bombKickedCount > 0; }
@@ -307,6 +418,42 @@ public:
     // Illness transfer notification (for client)
     bool HasIllnessTransfer() const { return m_illnessTransferCount > 0; }
     NetIllnessTransferPacket PopIllnessTransfer();
+
+    // Player hit notification (for client)
+    bool HasPlayerHit() const { return m_playerHitCount > 0; }
+    NetPlayerHitPacket PopPlayerHit();
+
+    // Co-op story mode methods (host only)
+    void SendCoopLevelInfo(int level, int bonuslevel, int needwon, int picturepre,
+                           int picturepost, int picturedead, const char* file, const char* code);
+    void SendCoopLevelStart(float gspeed);
+    void SendCoopLevelEnd(bool victory);
+    void SendCoopMenuState(int menustate);
+    // Combined level transition (atomic - prevents race condition from separate UDP packets)
+    void SendCoopLevelTransition(int level, int bonuslevel, int needwon, int picturepre,
+                                  int picturepost, int picturedead, const char* file,
+                                  const char* code, int menustate);
+
+    // Co-op story mode notifications (for client)
+    bool HasCoopLevelInfo() const { return m_coopLevelInfoUpdated; }
+    void ClearCoopLevelInfo() { m_coopLevelInfoUpdated = false; }
+    const NetCoopLevelInfoPacket& GetCoopLevelInfo() const { return m_coopLevelInfo; }
+
+    bool HasCoopLevelStart() const { return m_coopLevelStartSignal; }
+    void ClearCoopLevelStart() { m_coopLevelStartSignal = false; }
+    const NetCoopLevelStartPacket& GetCoopLevelStart() const { return m_coopLevelStartInfo; }
+
+    bool HasCoopLevelEnd() const { return m_coopLevelEndSignal; }
+    void ClearCoopLevelEnd() { m_coopLevelEndSignal = false; }
+    const NetCoopLevelEndPacket& GetCoopLevelEnd() const { return m_coopLevelEndInfo; }
+
+    bool HasCoopMenuState() const { return m_coopMenuStateUpdated; }
+    void ClearCoopMenuState() { m_coopMenuStateUpdated = false; }
+    const NetCoopMenuStatePacket& GetCoopMenuState() const { return m_coopMenuState; }
+
+    bool HasCoopLevelTransition() const { return m_coopLevelTransitionUpdated; }
+    void ClearCoopLevelTransition() { m_coopLevelTransitionUpdated = false; }
+    const NetCoopLevelTransitionPacket& GetCoopLevelTransition() const { return m_coopLevelTransition; }
 
     // State queries
     NetRole GetRole() const { return m_role; }
@@ -384,7 +531,8 @@ private:
     NetGameStatePacket m_gameState;
 
     // Bomb placed queue (for client) - circular buffer
-    static const int MAX_BOMB_QUEUE = 16;
+    // Increased from 16 to 32 to prevent overflow during heavy bomb placement
+    static const int MAX_BOMB_QUEUE = 32;
     NetBombPlacedPacket m_bombPlacedQueue[MAX_BOMB_QUEUE];
     int m_bombPlacedCount;
     int m_bombPlacedHead;
@@ -396,6 +544,20 @@ private:
     int m_bonusSpawnedCount;
     int m_bonusSpawnedHead;
     int m_bonusSpawnedTail;
+
+    // Bonus picked queue (for client) - circular buffer
+    static const int MAX_BONUS_PICKED_QUEUE = 16;
+    NetBonusPickedPacket m_bonusPickedQueue[MAX_BONUS_PICKED_QUEUE];
+    int m_bonusPickedCount;
+    int m_bonusPickedHead;
+    int m_bonusPickedTail;
+
+    // Bonus destroyed queue (for client) - circular buffer
+    static const int MAX_BONUS_DESTROYED_QUEUE = 16;
+    NetBonusDestroyedPacket m_bonusDestroyedQueue[MAX_BONUS_DESTROYED_QUEUE];
+    int m_bonusDestroyedCount;
+    int m_bonusDestroyedHead;
+    int m_bonusDestroyedTail;
 
     // Bomb kicked queue (for client) - circular buffer
     static const int MAX_KICK_QUEUE = 16;
@@ -412,7 +574,9 @@ private:
     int m_bombDetonateTail;
 
     // Monster state queue (for client) - circular buffer
-    static const int MAX_MRCHA_QUEUE = 64;
+    // Increased from 64 to 128 to prevent overflow with 15+ monsters and network latency
+    // Calculation: 15 monsters × 5 frames sync interval × ~2 for latency buffer = ~150 packets
+    static const int MAX_MRCHA_QUEUE = 128;
     NetMrchaStatePacket m_mrchaStateQueue[MAX_MRCHA_QUEUE];
     int m_mrchaStateCount;
     int m_mrchaStateHead;
@@ -425,7 +589,36 @@ private:
     int m_illnessTransferHead;
     int m_illnessTransferTail;
 
+    // Player hit queue (for client) - circular buffer
+    static const int MAX_PLAYER_HIT_QUEUE = 8;
+    NetPlayerHitPacket m_playerHitQueue[MAX_PLAYER_HIT_QUEUE];
+    int m_playerHitCount;
+    int m_playerHitHead;
+    int m_playerHitTail;
+
     uint32_t m_localFrame;
+
+    // Heartbeat tracking for disconnect detection
+    uint32_t m_lastPingSent;
+    uint32_t m_lastPongReceived;
+    static const uint32_t HEARTBEAT_INTERVAL_MS = 2000;   // Send ping every 2 seconds
+    static const uint32_t HEARTBEAT_TIMEOUT_MS = 10000;   // Consider disconnected after 10 seconds
+
+    // Co-op story mode data (for client)
+    bool m_coopLevelInfoUpdated;
+    NetCoopLevelInfoPacket m_coopLevelInfo;
+
+    bool m_coopLevelStartSignal;
+    NetCoopLevelStartPacket m_coopLevelStartInfo;
+
+    bool m_coopLevelEndSignal;
+    NetCoopLevelEndPacket m_coopLevelEndInfo;
+
+    bool m_coopMenuStateUpdated;
+    NetCoopMenuStatePacket m_coopMenuState;
+
+    bool m_coopLevelTransitionUpdated;
+    NetCoopLevelTransitionPacket m_coopLevelTransition;
 
     std::string m_lastError;
 };

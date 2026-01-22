@@ -15,7 +15,7 @@ public:
 	virtual void SetDanger();
 	void MoveXY();
 	virtual void Move();
-	void Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID, int dosah);
+	void Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID, int dosah, bool fromNetwork = false);
 	void Draw(int x, int y, int bx, int by);
 	GBomba();
 	virtual ~GBomba();
@@ -29,6 +29,7 @@ public:
 	int m_dir;      // smer sunuti
 
 	bool m_moveing; // zda se zrovna pohybuje
+	bool m_fromNetwork; // true if bomb was created from network (don't decrement m_bombused on explode)
 
 	float m_size;
 	float m_dsize;

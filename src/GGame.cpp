@@ -13,6 +13,19 @@
 #include "GBonus.h"
 #ifdef HAVE_SDL2_NET
 #include "Network.h"
+// Illness bonus types for network sync
+#include "GBonus_n_slow.h"
+#include "GBonus_n_berserk.h"
+#include "GBonus_n_nobomb.h"
+#include "GBonus_n_dement.h"
+#include "GBonus_n_stop.h"
+#include "GBonus_n_kicker.h"
+#define BONUS_TYPE_N_SLOW        100
+#define BONUS_TYPE_N_BERSERK     101
+#define BONUS_TYPE_N_NOBOMB      102
+#define BONUS_TYPE_N_DEMENT      103
+#define BONUS_TYPE_N_STOP        104
+#define BONUS_TYPE_N_KICKER      105
 #endif
 
 
@@ -231,12 +244,21 @@ void GGame::Move()
 	}
 
 	// Zasahy
-	for (i = 0; i < m_mrch; i++) {
-		m_mrcha[i].Hit();
-	}
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only the host processes hits
+	// Client receives m_lives and m_dead from GameState packets
+	if (m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+		// Client: skip hit detection, authoritative state comes from host
+	} else
+#endif
+	{
+		for (i = 0; i < m_mrch; i++) {
+			m_mrcha[i].Hit();
+		}
 
-	for (i = 0; i < m_bombers; i++) {
-		m_bomber[i].Hit();
+		for (i = 0; i < m_bombers; i++) {
+			m_bomber[i].Hit();
+		}
 	}
 
 #ifdef HAVE_SDL2_NET
@@ -244,28 +266,48 @@ void GGame::Move()
 	// Client waits for round end packet from host
 	if (m_networkMode == GAME_MODE_LAN) {
 		if (g_network.IsHost()) {
-			// Host: send periodic game state sync to client (every 5 frames)
-			if (m_game_time % 5 == 0) {
-				// Encode abilities as bit flags
+			// Host: send periodic player state sync to client (every 2 frames)
+			// Reduced from 5 to 2 to minimize m_hitting desync window
+			// m_hitting provides temporary invulnerability after being hit
+			if (m_game_time % 2 == 0) {
+				// Encode abilities as bit flags (including m_hitting)
 				int p0_abilities = (m_bomber[0].m_kopani ? 1 : 0) |
 				                   (m_bomber[0].m_posilani ? 2 : 0) |
-				                   (m_bomber[0].m_casovac ? 4 : 0);
+				                   (m_bomber[0].m_casovac ? 4 : 0) |
+				                   (m_bomber[0].m_hitting ? 8 : 0);
 				int p1_abilities = (m_bomber[1].m_kopani ? 1 : 0) |
 				                   (m_bomber[1].m_posilani ? 2 : 0) |
-				                   (m_bomber[1].m_casovac ? 4 : 0);
+				                   (m_bomber[1].m_casovac ? 4 : 0) |
+				                   (m_bomber[1].m_hitting ? 8 : 0);
+				// Get illness info (type 100-105 for illnesses, -1 for none)
+				int p0_illness_type = -1, p0_illness_timer = 0;
+				int p1_illness_type = -1, p1_illness_timer = 0;
+				if (m_bomber[0].m_bonus && m_bomber[0].m_bonus->m_illness) {
+					p0_illness_type = m_bomber[0].m_bonus->m_type;
+					p0_illness_timer = m_bomber[0].m_bonus->m_timer;
+				}
+				if (m_bomber[1].m_bonus && m_bomber[1].m_bonus->m_illness) {
+					p1_illness_type = m_bomber[1].m_bonus->m_type;
+					p1_illness_timer = m_bomber[1].m_bonus->m_timer;
+				}
 				g_network.SendGameState(
 					m_bomber[0].m_mx, m_bomber[0].m_my, m_bomber[0].m_x, m_bomber[0].m_y, m_bomber[0].m_dir, m_bomber[0].m_dead,
 					m_bomber[1].m_mx, m_bomber[1].m_my, m_bomber[1].m_x, m_bomber[1].m_y, m_bomber[1].m_dir, m_bomber[1].m_dead,
 					m_bomber[0].m_bombdosah, m_bomber[1].m_bombdosah, m_bomber[0].m_bomb, m_bomber[1].m_bomb,
 					m_bomber[0].m_megabombs, m_bomber[1].m_megabombs, m_bomber[0].m_napalmbombs, m_bomber[1].m_napalmbombs,
-					m_bomber[0].m_lives, m_bomber[1].m_lives, p0_abilities, p1_abilities
+					m_bomber[0].m_lives, m_bomber[1].m_lives, p0_abilities, p1_abilities,
+					m_bomber[0].m_score, m_bomber[1].m_score,
+					p0_illness_type, p0_illness_timer, p1_illness_type, p1_illness_timer
 				);
+			}
 
-				// Host: send monster states to client (every 5 frames)
+			// Host: send monster states to client (every 2 frames)
+			// Increased frequency from 4 to 2 frames for smoother movement and faster hitting sync
+			if (m_game_time % 2 == 0) {
 				for (int mi = 0; mi < m_mrch; mi++) {
 					g_network.SendMrchaState(mi, m_mrcha[mi].m_mx, m_mrcha[mi].m_my,
 						m_mrcha[mi].m_x, m_mrcha[mi].m_y, m_mrcha[mi].m_dir,
-						m_mrcha[mi].m_dead, m_mrcha[mi].m_lives);
+						m_mrcha[mi].m_dead, m_mrcha[mi].m_lives, m_mrcha[mi].m_hitting);
 				}
 			}
 			if (EndGame()) {
@@ -304,13 +346,21 @@ void GGame::Move()
 				// Sync lives
 				m_bomber[0].m_lives = state.p0_lives;
 				m_bomber[1].m_lives = state.p1_lives;
-				// Sync abilities from bit flags
+				// Sync abilities from bit flags (including m_hitting)
 				m_bomber[0].m_kopani = (state.p0_abilities & 1) != 0;
 				m_bomber[0].m_posilani = (state.p0_abilities & 2) != 0;
 				m_bomber[0].m_casovac = (state.p0_abilities & 4) != 0;
+				m_bomber[0].m_hitting = (state.p0_abilities & 8) != 0;
 				m_bomber[1].m_kopani = (state.p1_abilities & 1) != 0;
 				m_bomber[1].m_posilani = (state.p1_abilities & 2) != 0;
 				m_bomber[1].m_casovac = (state.p1_abilities & 4) != 0;
+				m_bomber[1].m_hitting = (state.p1_abilities & 8) != 0;
+				// Sync score
+				m_bomber[0].m_score = state.p0_score;
+				m_bomber[1].m_score = state.p1_score;
+				// Sync illnesses
+				SyncPlayerIllness(0, state.p0_illness_type, state.p0_illness_timer);
+				SyncPlayerIllness(1, state.p1_illness_type, state.p1_illness_timer);
 				g_network.ClearGameStateUpdate();
 			}
 
@@ -341,7 +391,7 @@ void GGame::Move()
 					break;
 				case NET_BOMB_REGULAR:
 				default:
-					bombIdx = m_map.AddBomb(bomberID, bomb.x, bomb.y, bomb.dosah);
+					bombIdx = m_map.AddBomb(bomberID, bomb.x, bomb.y, bomb.dosah, true);
 					break;
 				}
 
@@ -360,9 +410,12 @@ void GGame::Move()
 			while (g_network.HasBombKicked()) {
 				NetBombKickedPacket kick = g_network.PopBombKicked();
 				// Set the bomb's direction at the specified position
+				// Validate direction (1=left, 2=right, 3=up, 4=down)
 				if (kick.x >= 0 && kick.x < MAX_X && kick.y >= 0 && kick.y < MAX_Y) {
 					if (m_map.m_bmap[kick.x][kick.y].bomba != nullptr) {
-						m_map.m_bmap[kick.x][kick.y].bomba->m_dir = kick.dir;
+						if (kick.dir >= 1 && kick.dir <= 4) {
+							m_map.m_bmap[kick.x][kick.y].bomba->m_dir = kick.dir;
+						}
 					}
 				}
 			}
@@ -384,11 +437,11 @@ void GGame::Move()
 				NetMrchaStatePacket state = g_network.PopMrchaState();
 				int mrchaID = state.mrchaID;
 				if (mrchaID >= 0 && mrchaID < m_mrch) {
-					// Update monster position on map
-					// First remove from old position if alive
-					if (!m_mrcha[mrchaID].m_dead) {
-						m_map.m_mmap[m_mrcha[mrchaID].m_mx][m_mrcha[mrchaID].m_my]--;
-					}
+					// Save old position and death state for m_mmap update
+					int oldMx = m_mrcha[mrchaID].m_mx;
+					int oldMy = m_mrcha[mrchaID].m_my;
+					bool wasAlive = !m_mrcha[mrchaID].m_dead;
+
 					// Apply new state
 					m_mrcha[mrchaID].m_mx = state.mx;
 					m_mrcha[mrchaID].m_my = state.my;
@@ -396,36 +449,87 @@ void GGame::Move()
 					m_mrcha[mrchaID].m_y = state.y / 100.0f;
 					m_mrcha[mrchaID].m_dir = state.dir;
 					m_mrcha[mrchaID].m_lives = state.lives;
-					// Handle death state transition
+					m_mrcha[mrchaID].m_hitting = (state.hitting != 0);
+
+					bool isNowAlive = !state.dead;
+
+					// Update m_mmap based on position/alive state changes
+					// Bounds check to prevent buffer overflow
+					// Remove from old position if was alive there
+					if (wasAlive && oldMx >= 0 && oldMx < MAX_X && oldMy >= 0 && oldMy < MAX_Y) {
+						m_map.m_mmap[oldMx][oldMy]--;
+					}
+					// Add to new position if now alive
+					if (isNowAlive && state.mx >= 0 && state.mx < MAX_X && state.my >= 0 && state.my < MAX_Y) {
+						m_map.m_mmap[state.mx][state.my]++;
+					}
+
+					// Handle death state transition for animation
 					if (state.dead && !m_mrcha[mrchaID].m_dead) {
 						m_mrcha[mrchaID].m_dead = true;
 						m_mrcha[mrchaID].m_anim = 0;
-					} else if (!state.dead) {
-						m_mrcha[mrchaID].m_dead = false;
-						// Add back to position map if alive
-						m_map.m_mmap[m_mrcha[mrchaID].m_mx][m_mrcha[mrchaID].m_my]++;
+					} else {
+						m_mrcha[mrchaID].m_dead = state.dead;
 					}
 				}
 			}
 
 			// Client: process illness transfers from host
+			// Note: This is now handled via SyncPlayerIllness from GameState packets
+			// We just clear the queue to prevent stale packets accumulating
 			while (g_network.HasIllnessTransfer()) {
-				NetIllnessTransferPacket illness = g_network.PopIllnessTransfer();
-				int fromPlayer = illness.fromPlayer;
-				int toPlayer = illness.toPlayer;
-				// Transfer illness from one player to another
-				if (fromPlayer >= 0 && fromPlayer < m_bombers &&
-					toPlayer >= 0 && toPlayer < m_bombers &&
-					m_bomber[fromPlayer].m_bonus != nullptr &&
-					m_bomber[fromPlayer].m_bonus->m_illness) {
-					// Delete old bonus if present
-					if (m_bomber[toPlayer].m_bonus) {
-						m_bomber[toPlayer].m_bonus->End();
-						delete m_bomber[toPlayer].m_bonus;
+				g_network.PopIllnessTransfer();
+				// Illness will be applied via GameState sync which has the authoritative timer
+			}
+
+			// Client: process player hit events from host (immediate m_hitting sync)
+			while (g_network.HasPlayerHit()) {
+				NetPlayerHitPacket hit = g_network.PopPlayerHit();
+				int pid = hit.playerID;
+				if (pid >= 0 && pid < m_bombers) {
+					// Apply immediate hitting state update
+					m_bomber[pid].m_hitting = (hit.hitting != 0);
+					m_bomber[pid].m_lives = hit.lives;
+					// Handle death state transition
+					if (hit.dead && !m_bomber[pid].m_dead) {
+						m_bomber[pid].m_dead = true;
+						m_bomber[pid].m_anim = 0;
+						g_sb[SND_GAME_DEAD_BOMBER].Play(false);
 					}
-					// Copy illness
-					m_bomber[toPlayer].m_bonus = m_bomber[fromPlayer].m_bonus->GetCopy();
-					m_bomber[toPlayer].m_bonus->m_self = &m_bomber[toPlayer].m_bonus;
+				}
+			}
+
+			// Client: process bonus picked notifications from host
+			while (g_network.HasBonusPicked()) {
+				NetBonusPickedPacket picked = g_network.PopBonusPicked();
+				int bx = picked.x;
+				int by = picked.y;
+				int pickerID = picked.pickerID;
+				// Remove bonus from map (host already applied the bonus to the bomber)
+				if (bx >= 0 && bx < MAX_X && by >= 0 && by < MAX_Y) {
+					if (m_map.m_bonusmap[bx][by] != nullptr) {
+						// Bonus effects are synced via GameState packets
+						// Just delete the bonus visual on client
+						delete m_map.m_bonusmap[bx][by];
+						m_map.m_bonusmap[bx][by] = nullptr;
+						// Play sound effect
+						g_sb[SND_GAME_BONUS].Play(false);
+					}
+				}
+				(void)pickerID;  // Suppress unused warning
+			}
+
+			// Client: process bonus destroyed notifications from host
+			while (g_network.HasBonusDestroyed()) {
+				NetBonusDestroyedPacket destroyed = g_network.PopBonusDestroyed();
+				int bx = destroyed.x;
+				int by = destroyed.y;
+				// Remove bonus from map
+				if (bx >= 0 && bx < MAX_X && by >= 0 && by < MAX_Y) {
+					if (m_map.m_bonusmap[bx][by] != nullptr) {
+						delete m_map.m_bonusmap[bx][by];
+						m_map.m_bonusmap[bx][by] = nullptr;
+					}
 				}
 			}
 		}
@@ -579,3 +683,53 @@ int GGame::AddMrcha(int x, int y, int mrchaID)
 	if (i == m_mrch) m_mrch++;
 	return i;
 }
+
+#ifdef HAVE_SDL2_NET
+void GGame::SyncPlayerIllness(int playerID, int illnessType, int illnessTimer)
+{
+	if (playerID < 0 || playerID >= m_bombers) return;
+	GBomber& bomber = m_bomber[playerID];
+
+	// Check current illness state
+	int currentType = -1;
+	if (bomber.m_bonus && bomber.m_bonus->m_illness) {
+		currentType = bomber.m_bonus->m_type;
+	}
+
+	// If illness type changed
+	if (illnessType != currentType) {
+		// Remove current illness if any
+		if (bomber.m_bonus && bomber.m_bonus->m_illness) {
+			bomber.m_bonus->End();
+			delete bomber.m_bonus;
+			bomber.m_bonus = nullptr;
+		}
+
+		// Create new illness if needed
+		if (illnessType >= BONUS_TYPE_N_SLOW && illnessType <= BONUS_TYPE_N_KICKER) {
+			GBonus* newBonus = nullptr;
+			switch (illnessType) {
+			case BONUS_TYPE_N_SLOW:    newBonus = new GBonus_n_slow;    break;
+			case BONUS_TYPE_N_BERSERK: newBonus = new GBonus_n_berserk; break;
+			case BONUS_TYPE_N_NOBOMB:  newBonus = new GBonus_n_nobomb;  break;
+			case BONUS_TYPE_N_DEMENT:  newBonus = new GBonus_n_dement;  break;
+			case BONUS_TYPE_N_STOP:    newBonus = new GBonus_n_stop;    break;
+			case BONUS_TYPE_N_KICKER:  newBonus = new GBonus_n_kicker;  break;
+			}
+			if (newBonus) {
+				newBonus->m_type = illnessType;
+				newBonus->m_illness = true;
+				newBonus->m_onetime = false;
+				newBonus->m_timer = illnessTimer;
+				newBonus->m_timer_MAX = illnessTimer;
+				newBonus->m_bomber = &bomber;
+				newBonus->m_self = &bomber.m_bonus;
+				bomber.m_bonus = newBonus;
+			}
+		}
+	} else if (bomber.m_bonus && bomber.m_bonus->m_illness) {
+		// Same illness type, just update timer
+		bomber.m_bonus->m_timer = illnessTimer;
+	}
+}
+#endif

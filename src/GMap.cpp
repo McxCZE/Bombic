@@ -222,10 +222,10 @@ void GMap::Move()
 	if (++m_explodeanim > MAX_EXPLODEANIM) m_explodeanim = 0;
 }
 
-int GMap::AddBomb(int bomberID, int x, int y, int dosah)
+int GMap::AddBomb(int bomberID, int x, int y, int dosah, bool fromNetwork)
 {
 	int i;
-	
+
 	if (x < 1 || y < 1 || y >= MAX_Y || x >= MAX_X) return -1;
 
 	if (m_bmap[x][y].bomba != nullptr) return -1;
@@ -233,14 +233,15 @@ int GMap::AddBomb(int bomberID, int x, int y, int dosah)
 
 	for (i = 0; i < MAX_BOMBS; i++)
 		if (m_bomba[i] == nullptr) break;
-	
+
 	if (i >= MAX_BOMBS) return -1;
 
 	m_bomba[i] = new GBomba;
 
-	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah);
-	
-	if (bomberID != -1) m_game->m_bomber[bomberID].m_bombused++;
+	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah, fromNetwork);
+
+	// Only increment m_bombused if not from network (host already did it)
+	if (bomberID != -1 && !fromNetwork) m_game->m_bomber[bomberID].m_bombused++;
 
 	m_bmap[x][y].bomba = m_bomba[i];
 
@@ -261,7 +262,7 @@ int GMap::AddMegaBomb(int bomberID, int x, int y, int dosah, bool fromNetwork)
 
 	m_bomba[i] = (new GBombaMega);
 
-	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah);
+	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah, fromNetwork);
 	// Only decrement megabombs counter if not from network (host already did it)
 	if (!fromNetwork) {
 		m_game->m_bomber[bomberID].m_megabombs--;
@@ -286,7 +287,7 @@ int GMap::AddNapalmBomb(int bomberID, int x, int y, int dosah, bool fromNetwork)
 
 	m_bomba[i] = (new GBombaNapalm);
 
-	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah);
+	m_bomba[i]->Init(m_game, x, y, m_game->m_bBomba, m_game->m_bBomba_s, bomberID, dosah, fromNetwork);
 	// Only decrement napalmbombs counter if not from network (host already did it)
 	if (!fromNetwork) {
 		m_game->m_bomber[bomberID].m_napalmbombs--;
@@ -414,10 +415,25 @@ bool GMap::FireMap(int x, int y, int bmp, int b, int explotime)
 				
 
 		if (m_bmap[x][y].cas < explotime)
-			m_bmap[x][y].cas = explotime; 
+			m_bmap[x][y].cas = explotime;
 		if (m_bonusmap[x][y]) {
+#ifdef HAVE_SDL2_NET
+			// In LAN mode, only host can destroy bonuses
+			// Client waits for host notification
+			if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+				// Client: do NOT delete bonus - wait for host notification
+			} else {
+				// Host or local mode: delete bonus and notify client
+				if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+					g_network.SendBonusDestroyed(x, y);
+				}
+				delete m_bonusmap[x][y];
+				m_bonusmap[x][y] = nullptr;
+			}
+#else
 			delete m_bonusmap[x][y];
 			m_bonusmap[x][y] = nullptr;
+#endif
 		}
 		return true;
 	} 
@@ -505,6 +521,11 @@ void GMap::AddBonus(int mx, int my)
 
 void GMap::AddBonusByType(int mx, int my, int bonusType)
 {
+	// Bounds check to prevent buffer overflow
+	if (mx < 0 || mx >= MAX_X || my < 0 || my >= MAX_Y) {
+		return;
+	}
+
 	GBonus *b = nullptr;
 
 	// Check for illness types (100+)
@@ -537,6 +558,10 @@ void GMap::AddBonusByType(int mx, int my, int bonusType)
 	}
 
 	if (b) {
+		// Delete existing bonus to prevent memory leak
+		if (m_bonusmap[mx][my] != nullptr) {
+			delete m_bonusmap[mx][my];
+		}
 		m_bonusmap[mx][my] = b;
 		b->Init(mx, my, &m_bonusmap[mx][my], m_bBonus);
 	}

@@ -45,7 +45,7 @@ void GBomba::Draw(int x, int y, int bx, int by)
 	}
 }
 
-void GBomba::Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID, int dosah)
+void GBomba::Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID, int dosah, bool fromNetwork)
 {
 	GObject::Init(game, x, y, bBmp, bBmp_s);
 	m_valid = true;
@@ -54,6 +54,7 @@ void GBomba::Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID,
 	m_dosah = dosah;
 	m_size = 1;
 	m_dsize = (float)0.05;
+	m_fromNetwork = fromNetwork;
 
 	m_speed = (int)(5.0*gspeed);
 	m_dir   = 0;
@@ -71,7 +72,9 @@ void GBomba::Move()
 	MoveXY();
 
 	if (--m_bombtime < 1) {
-		if (m_bomberID != -1) m_game->m_bomber[m_bomberID].m_bombused--;
+		// Only decrement m_bombused if bomb was NOT created from network
+		// Network bombs don't increment on create, so shouldn't decrement on explode
+		if (m_bomberID != -1 && !m_fromNetwork) m_game->m_bomber[m_bomberID].m_bombused--;
 		m_valid = false;
 		m_game->m_map.BombExpolode(this);  // BombExpolode now handles deletion
 		g_sb[SND_GAME_EXPLODE].Play(false);

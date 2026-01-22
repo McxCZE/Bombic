@@ -210,14 +210,38 @@ int GBomber::Hit()
 				g_sb[SND_GAME_DEAD_BOMBER].Play(false);
 				m_dead = true;
 				m_anim = 0;
+#ifdef HAVE_SDL2_NET
+				// Send immediate hit event to client for death
+				if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+					g_network.SendPlayerHit(m_ID, true, m_lives, m_dead);
+				}
+#endif
 				if (m_map->m_bmap[m_mx][m_my].cas > 0)
 					return m_map->m_bmap[m_mx][m_my].barva;
 				else return -2;
 			}
 		}
+		// Only send if state changed from false to true
+		bool wasHitting = m_hitting;
 		m_hitting = true;
+#ifdef HAVE_SDL2_NET
+		// Send immediate hit event to client when hitting state changes
+		if (!wasHitting && m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+			g_network.SendPlayerHit(m_ID, m_hitting, m_lives, m_dead);
+		}
+#endif
 	}
-	else m_hitting = false;
+	else {
+		// Only send if state changed from true to false
+		bool wasHitting = m_hitting;
+		m_hitting = false;
+#ifdef HAVE_SDL2_NET
+		// Send immediate hit event to client when hitting state ends
+		if (wasHitting && m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+			g_network.SendPlayerHit(m_ID, m_hitting, m_lives, m_dead);
+		}
+#endif
+	}
 
 	return -1;
 }
@@ -271,10 +295,28 @@ void GBomber::GetBonus()
 
 
 	// bonus z mapy
+#ifdef HAVE_SDL2_NET
+	// In LAN mode, only host can pick up bonuses
+	// Client receives bonus pickup notification from host
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsClient()) {
+		// Client: do NOT pick up bonus directly - wait for host notification
+		return;
+	}
+#endif
+
 	GBonus *bonus = m_game->m_map.m_bonusmap[m_mx][m_my];
 
-	m_game->m_map.m_bonusmap[m_mx][m_my] = nullptr;
 	if (bonus == nullptr) return;
+
+	// Remove bonus from map BEFORE processing (prevents double pickup)
+	m_game->m_map.m_bonusmap[m_mx][m_my] = nullptr;
+
+#ifdef HAVE_SDL2_NET
+	// Host: notify client that bonus was picked up
+	if (m_game->m_networkMode == GAME_MODE_LAN && g_network.IsHost()) {
+		g_network.SendBonusPicked(m_mx, m_my, m_ID);
+	}
+#endif
 
 	if (!bonus->m_onetime && m_bonus) {
 		m_bonus->End();
