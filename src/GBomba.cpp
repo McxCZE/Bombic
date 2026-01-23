@@ -62,7 +62,9 @@ void GBomba::Init(GGame *game, int x, int y, int bBmp, int bBmp_s, int bomberID,
 	m_x = 25;
 	m_y = 25;
 
-	if (m_bomberID != -1 && m_game->m_bomber[m_bomberID].m_casovac) m_bombtime = 100000;
+	// BUG #36 FIX: Validate m_bomberID before array access to prevent buffer overflow
+	// Malformed network packets could contain invalid bomberID values
+	if (m_bomberID >= 0 && m_bomberID < MAX_BOMBERS && m_game->m_bomber[m_bomberID].m_casovac) m_bombtime = 100000;
 }
 
 void GBomba::Move()
@@ -74,7 +76,8 @@ void GBomba::Move()
 	if (--m_bombtime < 1) {
 		// Only decrement m_bombused if bomb was NOT created from network
 		// Network bombs don't increment on create, so shouldn't decrement on explode
-		if (m_bomberID != -1 && !m_fromNetwork) m_game->m_bomber[m_bomberID].m_bombused--;
+		// Also validate bomberID bounds to prevent buffer overflow from malformed packets
+		if (m_bomberID >= 0 && m_bomberID < MAX_BOMBERS && !m_fromNetwork) m_game->m_bomber[m_bomberID].m_bombused--;
 		m_valid = false;
 		m_game->m_map.BombExpolode(this);  // BombExpolode now handles deletion
 		g_sb[SND_GAME_EXPLODE].Play(false);

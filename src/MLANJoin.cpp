@@ -7,6 +7,7 @@
 #include "MLANJoin.h"
 #include "MainFrm.h"
 #include "Network.h"
+#include "MLAN.h"  // For g_coopMode
 #include <cstring>
 #include <cstdio>
 
@@ -93,13 +94,13 @@ int MLANJoin::OnKey(int nChar)
 	if (nChar == 0 && m_autoTransition) {
 		m_autoTransition = false;
 		g_sb[1].Play();
-		return MENU_LAN_LOBBY;
+		return g_coopMode ? MENU_LAN_COOP_LOBBY : MENU_LAN_LOBBY;
 	}
 
 	// If connected, any key goes to lobby
 	if (g_network.IsConnected()) {
 		if (nChar == SDLK_RETURN || nChar == SDLK_SPACE) {
-			return MENU_LAN_LOBBY;
+			return g_coopMode ? MENU_LAN_COOP_LOBBY : MENU_LAN_LOBBY;
 		}
 	}
 

@@ -63,6 +63,11 @@
 88 Mapa;
 89 Gotowy;
 90 Nie gotowy;
+91 Tryb kooperacji;
+92 Wybierz poziom;
+93 Poziom %d z %d;
+94 Czekam na hosta...;
+95 Deathmatch;
 
 100 Bombic;
 101 Szara kula;

@@ -64,6 +64,11 @@
 88 Map;
 89 Ready;
 90 Not Ready;
+91 Co-op Story;
+92 Select Level;
+93 Level %d of %d;
+94 Waiting for host...;
+95 Deathmatch;
 
 100 Bombic;
 101 Grey ball;

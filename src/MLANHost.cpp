@@ -7,6 +7,7 @@
 #include "MLANHost.h"
 #include "MainFrm.h"
 #include "Network.h"
+#include "MLAN.h"  // For g_coopMode
 #include <cstring>
 #include <cstdio>
 
@@ -140,7 +141,7 @@ int MLANHost::OnKey(int nChar)
 	if (nChar == 0 && m_autoTransition) {
 		m_autoTransition = false;
 		g_sb[1].Play();
-		return MENU_LAN_LOBBY;
+		return g_coopMode ? MENU_LAN_COOP_LOBBY : MENU_LAN_LOBBY;
 	}
 
 	switch (nChar) {
@@ -150,7 +151,7 @@ int MLANHost::OnKey(int nChar)
 		break;
 	case SDLK_RETURN:
 		if (g_network.IsConnected()) {
-			return MENU_LAN_LOBBY;
+			return g_coopMode ? MENU_LAN_COOP_LOBBY : MENU_LAN_LOBBY;
 		}
 		break;
 	}

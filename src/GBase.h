@@ -24,7 +24,9 @@
 #define MENU_LAN_HOST         12  // Host LAN game
 #define MENU_LAN_JOIN         13  // Join LAN game
 #define MENU_LAN_LOBBY        14  // LAN lobby
-#define MENU_LAN_PLAYING      15  // LAN game in progress 
+#define MENU_LAN_PLAYING      15  // LAN game in progress
+#define MENU_LAN_COOP_LOBBY   16  // Co-op story lobby
+#define MENU_LAN_COOP_PLAYING 17  // Co-op story game in progress
 
 class CMainFrame;
 class CD3DFont;

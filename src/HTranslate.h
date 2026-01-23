@@ -43,6 +43,11 @@
 #define _LNG_LAN_MAP_                lng.Translate(88)
 #define _LNG_LAN_READY_              lng.Translate(89)
 #define _LNG_LAN_NOT_READY_          lng.Translate(90)
+#define _LNG_LAN_COOP_               lng.Translate(91)
+#define _LNG_LAN_SELECT_LEVEL_       lng.Translate(92)
+#define _LNG_LAN_LEVEL_OF_           lng.Translate(93)
+#define _LNG_LAN_WAITING_HOST_       lng.Translate(94)
+#define _LNG_LAN_DEATHMATCH_         lng.Translate(95)
 
 #define _LNG_PAUSED_                 lng.Translate(40)
 

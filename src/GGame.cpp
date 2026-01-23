@@ -294,6 +294,7 @@ void GGame::Move()
 					m_bomber[0].m_mx, m_bomber[0].m_my, m_bomber[0].m_x, m_bomber[0].m_y, m_bomber[0].m_dir, m_bomber[0].m_dead,
 					m_bomber[1].m_mx, m_bomber[1].m_my, m_bomber[1].m_x, m_bomber[1].m_y, m_bomber[1].m_dir, m_bomber[1].m_dead,
 					m_bomber[0].m_bombdosah, m_bomber[1].m_bombdosah, m_bomber[0].m_bomb, m_bomber[1].m_bomb,
+					m_bomber[0].m_bombused, m_bomber[1].m_bombused,
 					m_bomber[0].m_megabombs, m_bomber[1].m_megabombs, m_bomber[0].m_napalmbombs, m_bomber[1].m_napalmbombs,
 					m_bomber[0].m_lives, m_bomber[1].m_lives, p0_abilities, p1_abilities,
 					m_bomber[0].m_score, m_bomber[1].m_score,
@@ -338,6 +339,9 @@ void GGame::Move()
 				m_bomber[1].m_bombdosah = state.p1_bombdosah;
 				m_bomber[0].m_bomb = state.p0_bomb;
 				m_bomber[1].m_bomb = state.p1_bomb;
+				// Sync bomb used counters (prevents bombused desync)
+				m_bomber[0].m_bombused = state.p0_bombused;
+				m_bomber[1].m_bombused = state.p1_bombused;
 				// Sync special bomb counts
 				m_bomber[0].m_megabombs = state.p0_megabombs;
 				m_bomber[1].m_megabombs = state.p1_megabombs;
@@ -436,7 +440,10 @@ void GGame::Move()
 			while (g_network.HasMrchaState()) {
 				NetMrchaStatePacket state = g_network.PopMrchaState();
 				int mrchaID = state.mrchaID;
-				if (mrchaID >= 0 && mrchaID < m_mrch) {
+				// BUG #61 FIX: Validate against both MAX_GMRCH (array size) and m_mrch (initialized count)
+				// MAX_GMRCH prevents buffer overflow, m_mrch prevents accessing uninitialized monsters
+				// Without m_mrch check, could create "ghost" monsters above actual spawn count
+				if (mrchaID >= 0 && mrchaID < MAX_GMRCH && mrchaID < m_mrch) {
 					// Save old position and death state for m_mmap update
 					int oldMx = m_mrcha[mrchaID].m_mx;
 					int oldMy = m_mrcha[mrchaID].m_my;
@@ -458,10 +465,18 @@ void GGame::Move()
 					// Remove from old position if was alive there
 					if (wasAlive && oldMx >= 0 && oldMx < MAX_X && oldMy >= 0 && oldMy < MAX_Y) {
 						m_map.m_mmap[oldMx][oldMy]--;
+						// Sanity check: m_mmap should never go negative
+						if (m_map.m_mmap[oldMx][oldMy] < 0) {
+							m_map.m_mmap[oldMx][oldMy] = 0;
+						}
 					}
 					// Add to new position if now alive
+					// BUG #57 FIX: Add overflow protection to prevent m_mmap from exceeding 255
+					// Packet reordering could cause multiple increments for same monster
 					if (isNowAlive && state.mx >= 0 && state.mx < MAX_X && state.my >= 0 && state.my < MAX_Y) {
-						m_map.m_mmap[state.mx][state.my]++;
+						if (m_map.m_mmap[state.mx][state.my] < 255) {
+							m_map.m_mmap[state.mx][state.my]++;
+						}
 					}
 
 					// Handle death state transition for animation
@@ -482,15 +497,19 @@ void GGame::Move()
 				// Illness will be applied via GameState sync which has the authoritative timer
 			}
 
-			// Client: process player hit events from host (immediate m_hitting sync)
+			// Client: process player hit events from host
+			// BUG #62 FIX: Don't sync m_hitting from PlayerHit - use GameState only
+			// Having two sources (GameState + PlayerHit) without ordering guarantee
+			// causes desync when packets arrive in wrong order
+			// GameState syncs m_hitting every 2 frames, which is sufficient
 			while (g_network.HasPlayerHit()) {
 				NetPlayerHitPacket hit = g_network.PopPlayerHit();
 				int pid = hit.playerID;
 				if (pid >= 0 && pid < m_bombers) {
-					// Apply immediate hitting state update
-					m_bomber[pid].m_hitting = (hit.hitting != 0);
-					m_bomber[pid].m_lives = hit.lives;
-					// Handle death state transition
+					// BUG #51 FIX: Don't sync m_lives from PlayerHit packets
+					// Lives are already synced via GameState packets every 2 frames
+					// BUG #62 FIX: Don't sync m_hitting here - use GameState only
+					// Only handle death state transition which needs immediate update
 					if (hit.dead && !m_bomber[pid].m_dead) {
 						m_bomber[pid].m_dead = true;
 						m_bomber[pid].m_anim = 0;

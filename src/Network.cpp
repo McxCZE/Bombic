@@ -75,6 +75,8 @@ Network::Network()
     , m_coopLevelEndSignal(false)
     , m_coopMenuStateUpdated(false)
     , m_coopLevelTransitionUpdated(false)
+    , m_lastConnectTime(0)  // BUG #37 FIX: Initialize connect time tracking
+    , m_connectStartTime(0) // BUG #64 FIX: Initialize connect start time tracking
 {
     memset(&m_remoteAddr, 0, sizeof(m_remoteAddr));
     memset(&m_gameStartInfo, 0, sizeof(m_gameStartInfo));
@@ -201,6 +203,11 @@ bool Network::StartClient(const char* hostIP, int port)
     m_remoteReady = false;
     m_gameStarted = false;
     m_localFrame = 0;
+    // BUG #37 FIX: Reset connect time when entering CONNECTING state
+    // This ensures proper timing for connect packet retries after reconnect
+    m_lastConnectTime = 0;
+    // BUG #64 FIX: Record when we started connecting for timeout tracking
+    m_connectStartTime = SDL_GetTicks();
 
     // Send connection request
     NetConnectPacket packet;
@@ -233,6 +240,55 @@ void Network::Disconnect()
     m_remoteReady = false;
     m_gameStarted = false;
     m_mapInfoUpdated = false;
+
+    // BUG #56 FIX: Reset all packet queues to prevent ghost data on reconnect
+    // Without this, stale packets from previous game session could be processed
+    // after reconnecting, causing desync (ghost bombs, dead monsters, etc.)
+    m_bombPlacedCount = 0;
+    m_bombPlacedHead = 0;
+    m_bombPlacedTail = 0;
+    m_bonusSpawnedCount = 0;
+    m_bonusSpawnedHead = 0;
+    m_bonusSpawnedTail = 0;
+    m_bonusPickedCount = 0;
+    m_bonusPickedHead = 0;
+    m_bonusPickedTail = 0;
+    m_bonusDestroyedCount = 0;
+    m_bonusDestroyedHead = 0;
+    m_bonusDestroyedTail = 0;
+    m_bombKickedCount = 0;
+    m_bombKickedHead = 0;
+    m_bombKickedTail = 0;
+    m_bombDetonateCount = 0;
+    m_bombDetonateHead = 0;
+    m_bombDetonateTail = 0;
+    m_mrchaStateCount = 0;
+    m_mrchaStateHead = 0;
+    m_mrchaStateTail = 0;
+    m_illnessTransferCount = 0;
+    m_illnessTransferHead = 0;
+    m_illnessTransferTail = 0;
+    m_playerHitCount = 0;
+    m_playerHitHead = 0;
+    m_playerHitTail = 0;
+
+    // Reset state flags
+    m_gameStateUpdated = false;
+    m_roundEnded = false;
+    m_nextRoundSignal = false;
+    m_coopLevelInfoUpdated = false;
+    m_coopLevelStartSignal = false;
+    m_coopLevelEndSignal = false;
+    m_coopMenuStateUpdated = false;
+    m_coopLevelTransitionUpdated = false;
+
+    // Reset remote input state
+    m_remoteLeft = false;
+    m_remoteRight = false;
+    m_remoteUp = false;
+    m_remoteDown = false;
+    m_remoteAction = false;
+    m_remoteFrame = 0;
 }
 
 void Network::Update()
@@ -247,10 +303,20 @@ void Network::Update()
     Uint32 now = SDL_GetTicks();
 
     // If client is connecting, resend connection request periodically
+    // BUG #37 FIX: Use member variable instead of static to properly reset on reconnect
     if (m_state == NET_STATE_CONNECTING) {
-        static Uint32 lastConnectTime = 0;
-        if (now - lastConnectTime > 1000) {  // Resend every second
-            lastConnectTime = now;
+        // BUG #64 FIX: Check for connection timeout
+        // Without timeout, client could wait forever if host is unreachable
+        if (now - m_connectStartTime > CONNECT_TIMEOUT_MS) {
+            NetLog("Connection timeout - host unreachable");
+            m_lastError = "Connection timeout - host unreachable";
+            m_state = NET_STATE_DISCONNECTED;
+            m_hasRemoteAddr = false;
+            return;
+        }
+
+        if (now - m_lastConnectTime > 1000) {  // Resend every second
+            m_lastConnectTime = now;
             NetConnectPacket packet;
             packet.type = NET_PACKET_CONNECT;
             packet.protocolVersion = NET_PROTOCOL_VERSION;
@@ -725,6 +791,7 @@ void Network::SendNextRound()
 void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
                             int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
                             int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
+                            int p0_bombused, int p1_bombused,
                             int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
                             int p0_lives, int p1_lives, int p0_abilities, int p1_abilities,
                             int p0_score, int p1_score,
@@ -751,6 +818,8 @@ void Network::SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0
     packet.p1_bombdosah = (uint8_t)p1_bombdosah;
     packet.p0_bomb = (uint8_t)p0_bomb;
     packet.p1_bomb = (uint8_t)p1_bomb;
+    packet.p0_bombused = (uint8_t)p0_bombused;
+    packet.p1_bombused = (uint8_t)p1_bombused;
     packet.p0_megabombs = (uint8_t)p0_megabombs;
     packet.p1_megabombs = (uint8_t)p1_megabombs;
     packet.p0_napalmbombs = (uint8_t)p0_napalmbombs;
@@ -1060,7 +1129,7 @@ void Network::SendCoopMenuState(int menustate)
 
 void Network::SendCoopLevelTransition(int level, int bonuslevel, int needwon, int picturepre,
                                        int picturepost, int picturedead, const char* file,
-                                       const char* code, int menustate)
+                                       const char* code, int menustate, int mrchovnik)
 {
     if (m_role != NET_ROLE_HOST || m_state < NET_STATE_CONNECTED) return;
 
@@ -1073,6 +1142,8 @@ void Network::SendCoopLevelTransition(int level, int bonuslevel, int needwon, in
     packet.picturepost = (uint8_t)picturepost;
     packet.picturedead = (uint8_t)picturedead;
     packet.menustate = (uint8_t)menustate;
+    // BUG #40 FIX: Include mrchovnik in packet for monster count sync
+    packet.mrchovnik = (uint8_t)mrchovnik;
     strncpy(packet.file, file, sizeof(packet.file) - 1);
     packet.file[sizeof(packet.file) - 1] = '\0';
     strncpy(packet.code, code, sizeof(packet.code) - 1);

@@ -5,6 +5,10 @@
 
 Bombic je klasická arkádová hra ve stylu Bombermana. Původně vytvořena pro Windows, nyní portována na Linux s použitím SDL2.
 
+## Novinky oproti originálu
+
+- **LAN multiplayer** - Možnost hrát po síti s více hráči (host/client režim)
+
 ## Rychlá instalace (Arch Linux / Manjaro)
 
 ```bash

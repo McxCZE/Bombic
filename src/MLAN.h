@@ -7,7 +7,10 @@
 
 #include "GBase.h"
 
-#define MAX_LAN_SEL 3
+#define MAX_LAN_SEL 4
+
+// Global flag to indicate co-op mode (vs deathmatch)
+extern bool g_coopMode;
 
 class MLAN : public GBase
 {

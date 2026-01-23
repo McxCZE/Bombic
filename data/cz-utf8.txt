@@ -64,6 +64,11 @@
 88 Mapa;
 89 Připraven;
 90 Nepřipraven;
+91 Kooperativní příběh;
+92 Vybrat úroveň;
+93 Úroveň %d z %d;
+94 Čekám na hostitele...;
+95 Dedmeč;
 
 100 Bombič;
 101 Koule hnědá;

@@ -68,6 +68,11 @@
 88 Karte;
 89 Bereit;
 90 Nicht bereit;
+91 Koop Story;
+92 Level auswählen;
+93 Level %d von %d;
+94 Warte auf Host...;
+95 Deathmatch;
 
 100 Bombic;
 101 Grauer Ball;

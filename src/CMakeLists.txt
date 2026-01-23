@@ -72,6 +72,8 @@ if(HAVE_SDL2_NET)
         MLANJoin.cpp
         MLANLobby.cpp
         MLANPlaying.cpp
+        MLANCoopLobby.cpp
+        MLANCoopPlaying.cpp
     )
 endif()
 

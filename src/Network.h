@@ -175,6 +175,9 @@ struct NetCoopLevelTransitionPacket {
     uint8_t picturepost;    // Victory picture ID
     uint8_t picturedead;    // Defeat picture ID
     uint8_t menustate;      // 0=intro, 1=playing, 2=victory, 3=defeat
+    // BUG #40 FIX: Added mrchovnik to sync max monster count between host and client
+    // Without this, client may have different gmaxmrchovnik causing monster count desync
+    uint8_t mrchovnik;      // Max monsters for this level
     char file[20];          // Map filename
     char code[8];           // Level code
 };
@@ -268,6 +271,9 @@ struct NetGameStatePacket {
     uint8_t p1_bombdosah;   // Player 1 bomb range
     uint8_t p0_bomb;        // Player 0 max bombs
     uint8_t p1_bomb;        // Player 1 max bombs
+    // Bomb counters for sync (prevents bombused desync)
+    uint8_t p0_bombused;    // Player 0 currently placed bombs
+    uint8_t p1_bombused;    // Player 1 currently placed bombs
     // Additional stats for special abilities
     uint8_t p0_megabombs;   // Player 0 mega bombs count
     uint8_t p1_megabombs;   // Player 1 mega bombs count
@@ -346,6 +352,7 @@ public:
     void SendGameState(int p0_mx, int p0_my, float p0_x, float p0_y, int p0_dir, bool p0_dead,
                        int p1_mx, int p1_my, float p1_x, float p1_y, int p1_dir, bool p1_dead,
                        int p0_bombdosah, int p1_bombdosah, int p0_bomb, int p1_bomb,
+                       int p0_bombused, int p1_bombused,
                        int p0_megabombs, int p1_megabombs, int p0_napalmbombs, int p1_napalmbombs,
                        int p0_lives, int p1_lives, int p0_abilities, int p1_abilities,
                        int p0_score, int p1_score,
@@ -430,9 +437,10 @@ public:
     void SendCoopLevelEnd(bool victory);
     void SendCoopMenuState(int menustate);
     // Combined level transition (atomic - prevents race condition from separate UDP packets)
+    // BUG #40 FIX: Added mrchovnik parameter for monster count sync
     void SendCoopLevelTransition(int level, int bonuslevel, int needwon, int picturepre,
                                   int picturepost, int picturedead, const char* file,
-                                  const char* code, int menustate);
+                                  const char* code, int menustate, int mrchovnik = 0);
 
     // Co-op story mode notifications (for client)
     bool HasCoopLevelInfo() const { return m_coopLevelInfoUpdated; }
@@ -531,8 +539,9 @@ private:
     NetGameStatePacket m_gameState;
 
     // Bomb placed queue (for client) - circular buffer
-    // Increased from 16 to 32 to prevent overflow during heavy bomb placement
-    static const int MAX_BOMB_QUEUE = 32;
+    // BUG #66 FIX: Increased from 32 to 64 to handle heavy mega bombing
+    // 3 mega bombs can generate 24+ bomb packets, 64 provides safety margin
+    static const int MAX_BOMB_QUEUE = 64;
     NetBombPlacedPacket m_bombPlacedQueue[MAX_BOMB_QUEUE];
     int m_bombPlacedCount;
     int m_bombPlacedHead;
@@ -553,7 +562,10 @@ private:
     int m_bonusPickedTail;
 
     // Bonus destroyed queue (for client) - circular buffer
-    static const int MAX_BONUS_DESTROYED_QUEUE = 16;
+    // BUG #38 FIX: Increased from 16 to 64 to handle mega bomb explosions
+    // Mega bombs can generate 8+ bomb placements each destroying multiple bonuses
+    // 3 mega bombs near each other could generate 75+ bonus destroyed packets
+    static const int MAX_BONUS_DESTROYED_QUEUE = 64;
     NetBonusDestroyedPacket m_bonusDestroyedQueue[MAX_BONUS_DESTROYED_QUEUE];
     int m_bonusDestroyedCount;
     int m_bonusDestroyedHead;
@@ -574,9 +586,11 @@ private:
     int m_bombDetonateTail;
 
     // Monster state queue (for client) - circular buffer
-    // Increased from 64 to 128 to prevent overflow with 15+ monsters and network latency
-    // Calculation: 15 monsters × 5 frames sync interval × ~2 for latency buffer = ~150 packets
-    static const int MAX_MRCHA_QUEUE = 128;
+    // BUG #41 FIX: Increased from 128 to 512 to prevent overflow with high monster counts
+    // Calculation: MAX_GMRCH=256 monsters × sync every 2 frames × latency buffer
+    // With 100-300ms latency (3-7 frames), worst case: 256 * 7 / 2 = 896 packets pending
+    // 512 provides good coverage for typical scenarios while avoiding excessive memory
+    static const int MAX_MRCHA_QUEUE = 512;
     NetMrchaStatePacket m_mrchaStateQueue[MAX_MRCHA_QUEUE];
     int m_mrchaStateCount;
     int m_mrchaStateHead;
@@ -603,6 +617,8 @@ private:
     uint32_t m_lastPongReceived;
     static const uint32_t HEARTBEAT_INTERVAL_MS = 2000;   // Send ping every 2 seconds
     static const uint32_t HEARTBEAT_TIMEOUT_MS = 10000;   // Consider disconnected after 10 seconds
+    // BUG #64 FIX: Connection attempt timeout
+    static const uint32_t CONNECT_TIMEOUT_MS = 30000;     // Give up connecting after 30 seconds
 
     // Co-op story mode data (for client)
     bool m_coopLevelInfoUpdated;
@@ -619,6 +635,13 @@ private:
 
     bool m_coopLevelTransitionUpdated;
     NetCoopLevelTransitionPacket m_coopLevelTransition;
+
+    // BUG #37 FIX: Track last connect time as member variable instead of static
+    // Static variable would persist across reconnects causing timing issues
+    // NOTE: Placed here to match initialization order in constructor
+    uint32_t m_lastConnectTime;
+    // BUG #64 FIX: Track when we first started trying to connect for timeout
+    uint32_t m_connectStartTime;
 
     std::string m_lastError;
 };

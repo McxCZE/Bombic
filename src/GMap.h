@@ -46,7 +46,7 @@ public:
 	void AddBonus(int mx, int my);
 	void Destroy();
 	void BombExpolode(GBomba *bomb, int time = EXPLOTIME);
-	int AddBomb(int bomberID, int x, int y, int dosah); // vraci true kdyz se podarilo
+	int AddBomb(int bomberID, int x, int y, int dosah, bool fromNetwork = false); // vraci true kdyz se podarilo
 	void Move();
 	bool IsFree(int x, int y) const;
 	void LoadMap(st_map *map);

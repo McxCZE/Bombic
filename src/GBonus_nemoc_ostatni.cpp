@@ -5,6 +5,10 @@
 #include "stdafx.h"
 #include "D3DXApp.h"
 #include "GBonus_nemoc_ostatni.h"
+#include "config.h"
+#ifdef HAVE_SDL2_NET
+#include "Network.h"
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -27,6 +31,12 @@ GBonus_nemoc_ostatni::~GBonus_nemoc_ostatni()
 
 void GBonus_nemoc_ostatni::OneTime()
 {
+	// BUG #35 FIX: Only host should apply illness to other players
+	// Client receives illness state through network sync (GameState packet)
+	// Without this check, both host and client would try to add nemoc causing race conditions
+#ifdef HAVE_SDL2_NET
+	if (g_network.IsClient()) return;
+#endif
 	for (int i = 0; i < m_game->m_bombers; i++)
 		if (&m_game->m_bomber[i] != m_bomber && m_game->m_bomber[i].m_dead == false)
 			m_game->m_map.AddNemoc(m_game->m_bomber[i].m_mx, m_game->m_bomber[i].m_my);

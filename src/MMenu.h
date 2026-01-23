@@ -23,6 +23,8 @@
 #include "MLANJoin.h"
 #include "MLANLobby.h"
 #include "MLANPlaying.h"
+#include "MLANCoopLobby.h"
+#include "MLANCoopPlaying.h"
 #endif
 
 
@@ -55,6 +57,8 @@ public:
 	MLANJoin       m_MlanJoin;
 	MLANLobby      m_MlanLobby;
 	MLANPlaying    m_MlanPlaying;
+	MLANCoopLobby  m_MlanCoopLobby;
+	MLANCoopPlaying m_MlanCoopPlaying;
 #endif
 
 	int m_bMenuBMP;

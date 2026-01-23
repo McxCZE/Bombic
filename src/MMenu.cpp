@@ -159,6 +159,19 @@ int MMenu::OnKey(int nChar)
 					info.victories);
 			}
 			break;
+		case MENU_LAN_COOP_LOBBY:
+			m_actual->Destroy();
+			m_MlanCoopLobby.Init(m_pParent);
+			m_actual = &m_MlanCoopLobby;
+			break;
+		case MENU_LAN_COOP_PLAYING:
+			m_actual->Destroy();
+			m_MlanCoopPlaying.Init(m_pParent);
+			m_actual = &m_MlanCoopPlaying;
+			// Both host and client use StartCampaign with level from lobby
+			// (lobby already synced level from host to client via CoopLevelInfo packets)
+			m_MlanCoopPlaying.StartCampaign(m_MlanCoopLobby.GetSelectedLevel());
+			break;
 #endif
 		case MENU_DEFAULT      :
 			return MENU_DEFAULT;
@@ -207,5 +220,7 @@ void MMenu::Destroy()
 	m_MlanJoin.Destroy();
 	m_MlanLobby.Destroy();
 	m_MlanPlaying.Destroy();
+	m_MlanCoopLobby.Destroy();
+	m_MlanCoopPlaying.Destroy();
 #endif
 }

@@ -26,6 +26,9 @@ public:
 	int  AddMrcha(int x, int y, int mrchaID);
 	bool m_gameended;
 	bool EndGame();  // zda uz je konec hry (vybiti bombicu) / vybiti mrch
+#ifdef HAVE_SDL2_NET
+	void SyncPlayerIllness(int playerID, int illnessType, int illnessTimer);
+#endif
 
 	bool m_deadmatch;
 	int m_networkMode;   // GAME_MODE_LOCAL or GAME_MODE_LAN
