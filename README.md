@@ -1,4 +1,4 @@
-# Bombic Native
+# Bombic
 
 > **FORK** - Toto je fork původní hry Bombic od Bernarda Lidického (Hippo Games, 2001).
 > Původní hra byla vytvořena pro Windows a je licencována pod **GNU General Public License v2**.
